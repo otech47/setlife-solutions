@@ -38,7 +38,7 @@ const Button = ({
     className
 }: ButtonProps) => {
 
-    const styleProps = variants[variant || 'primary'];
+    const styleProps = variants[(variant || 'primary') as keyof typeof variants];
 
     const buttonContent = children;
 
