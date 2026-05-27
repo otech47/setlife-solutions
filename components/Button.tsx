@@ -26,7 +26,8 @@ const variants = {
     },
     'dark': {
         'background': 'bg-solid-black',
-        'color': 'text-solid-white' 
+        'border': '',
+        'color': 'text-solid-white'
     }
 }
 
