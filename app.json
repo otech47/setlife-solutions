@@ -1,0 +1,65 @@
+{
+    "name": "setlife-solutions",
+    "description": "Setlife Solutions marketing site + GraphQL API (Next.js 12 monolith) deployed to Heroku.",
+    "repository": "https://github.com/setlife-network/setlife-solutions",
+    "buildpacks": [
+        { "url": "heroku/nodejs" }
+    ],
+    "addons": [
+        "heroku-postgresql"
+    ],
+    "formation": {
+        "web": { "quantity": 1 }
+    },
+    "env": {
+        "API_V1_URL": {
+            "description": "Public URL of this app's own GraphQL endpoint, e.g. https://<app-name>.herokuapp.com/api/v1. The Apollo client reads this at build time to talk to the same app over HTTP. Must be set AFTER the app is created (chicken-and-egg with the Heroku hostname).",
+            "required": true
+        },
+        "POSTGRES_DB_HOST": {
+            "description": "Postgres host. The heroku-postgresql addon provisions DATABASE_URL; the host segment must be copied here. The app reads POSTGRES_DB_* directly, not DATABASE_URL.",
+            "required": true
+        },
+        "POSTGRES_DB_PORT": {
+            "description": "Postgres port.",
+            "value": "5432",
+            "required": true
+        },
+        "POSTGRES_DB_USERNAME": {
+            "description": "Postgres username, copied from the heroku-postgresql DATABASE_URL.",
+            "required": true
+        },
+        "POSTGRES_DB_PASSWORD": {
+            "description": "Postgres password, copied from the heroku-postgresql DATABASE_URL.",
+            "required": true
+        },
+        "POSTGRES_DB_NAME": {
+            "description": "Postgres database name, copied from the heroku-postgresql DATABASE_URL.",
+            "required": true
+        },
+        "SENDGRID_API_KEY": {
+            "description": "SendGrid API key for transactional email (consultation + contributor-inquiry forms).",
+            "required": true
+        },
+        "CONSULTATION_FORM_EMAIL": {
+            "description": "Inbox that receives consultation form submissions.",
+            "required": true
+        },
+        "AWS_ACCESS_KEY_ID": {
+            "description": "AWS access key for client-side S3 uploads from ContributorInquiryForm. Exposed to the browser via next.config.js. NOT set in current prod - the upload feature is silently disabled. Leave unset unless you intend to re-enable uploads.",
+            "required": false
+        },
+        "AWS_SECRET_ACCESS_KEY": {
+            "description": "AWS secret key, pairs with AWS_ACCESS_KEY_ID. Same caveats - not set in current prod.",
+            "required": false
+        },
+        "DISCORD_WEBHOOK": {
+            "description": "Discord webhook URL for form-submission notifications. Set in prod, not in staging.",
+            "required": false
+        },
+        "NEXT_PUBLIC_GOOGLE_ANALYTICS": {
+            "description": "Google Analytics measurement ID. Optional - gtag script is skipped if unset.",
+            "required": false
+        }
+    }
+}
