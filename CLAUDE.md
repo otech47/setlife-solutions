@@ -60,6 +60,15 @@ Required for full functionality (see `.env.example`): `POSTGRES_DB_*`, `API_V1_U
 
 **Target: Heroku, manual `git push` deploys, no auto-deploy from GitHub.** Validated against the live Heroku environment 2026-05-27.
 
+### Branch model
+
+- **`develop`** is the integration branch. All work (features, fixes, hotfixes, doc changes) lands here via PR. Open PRs against `develop`, not `master`.
+- **`master`** is a mirror of what is currently deployed to Heroku production. Nothing lands on `master` except by merging `develop` into it as part of a prod deploy.
+- **Staging deploys come from `develop`** (or any feature branch you want to test). Push to `heroku-staging` with `git push heroku-staging <branch>:master`.
+- **Prod deploys come from `master`** via `heroku pipelines:promote`. The flow is: merge `develop` into `master`, then promote the staging slug (which was built from develop) to prod. `master` HEAD should always equal the SHA running on `setlife-solutions`.
+
+This means: if you look at `git log master` and the latest commit is not the SHA in `heroku releases -a setlife-solutions`, something has drifted and needs reconciling before the next deploy.
+
 ### The pipeline
 
 Heroku pipeline `setlife-solutions`, owned by team `setlife-development`. Two apps:
@@ -91,9 +100,10 @@ heroku git:remote -a setlife-solutions-staging -r heroku-staging
 heroku git:remote -a setlife-solutions         -r heroku-prod
 ```
 
-**Step 3 - deploy to staging:**
+**Step 3 - deploy `develop` to staging:**
 ```bash
-git push heroku-staging HEAD:master
+git checkout develop && git pull
+git push heroku-staging develop:master
 # Staging is normally scaled to 0 to save billing. To run + verify:
 heroku ps:scale web=1 -a setlife-solutions-staging
 heroku logs --tail -a setlife-solutions-staging   # watch boot
@@ -110,10 +120,14 @@ heroku ps:scale web=0 -a setlife-solutions-staging   # OFF - dyno billing stops
 ```
 The `heroku-postgresql:essential-0` addon (~$5/mo) keeps running regardless of dyno state, so the DB persists across on/off cycles.
 
-**Step 4 - promote the verified slug to production** (do NOT `git push heroku-prod` - promotion copies the exact slug from staging, eliminating "works in staging, fails in prod" build differences):
+**Step 4 - merge develop into master, then promote the verified slug to production** (do NOT `git push heroku-prod` - promotion copies the exact slug from staging, eliminating "works in staging, fails in prod" build differences):
 ```bash
+git checkout master && git pull
+git merge --ff-only develop   # fast-forward only; if it fails, develop has not absorbed master's history yet
+git push origin master
 heroku pipelines:promote -a setlife-solutions-staging
 ```
+The `git merge --ff-only` step is what keeps the model honest: master HEAD will equal the slug's source SHA after the promote completes.
 
 **Step 5 - verify prod and have a rollback ready:**
 ```bash
