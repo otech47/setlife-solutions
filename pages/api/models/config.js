@@ -1,19 +1,11 @@
-const { POSTGRES } = require('../../../config/credentials.ts')
-
-const {
-    DB_HOST,
-    DB_USERNAME,
-    DB_PASSWORD,
-    DB_NAME,
-    DB_PORT
-} = POSTGRES
+require('dotenv').config()
 
 const base = {
-    username: DB_USERNAME,
-    password: DB_PASSWORD,
-    database: DB_NAME,
-    host: DB_HOST,
-    port: DB_PORT,
+    username: process.env.POSTGRES_DB_USERNAME,
+    password: process.env.POSTGRES_DB_PASSWORD,
+    database: process.env.POSTGRES_DB_NAME,
+    host: process.env.POSTGRES_DB_HOST,
+    port: process.env.POSTGRES_DB_PORT,
     dialect: 'postgres',
     dialectOptions: {
         ssl: {
