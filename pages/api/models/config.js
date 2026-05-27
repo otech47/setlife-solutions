@@ -8,43 +8,24 @@ const {
     DB_PORT
 } = POSTGRES
 
-module.exports = {
-    development: {
-        username: DB_USERNAME,
-        password: DB_PASSWORD,
-        database: DB_NAME,
-        host: DB_HOST,
-        port: DB_PORT,
-        dialect: 'postgres',
-        dialectOptions: {
-            ssl: {
-                require: true,
-                rejectUnauthorized: false
-            }
-        },
-    },
-    staging: {
-        username: DB_USERNAME,
-        password: DB_PASSWORD,
-        database: DB_NAME,
-        host: DB_HOST,
-        port: DB_PORT,
-        dialect: 'postgres'
-    },
-    test: {
-        username: DB_USERNAME,
-        password: DB_PASSWORD,
-        database: DB_NAME,
-        host: DB_HOST,
-        port: DB_PORT,
-        dialect: 'postgres'
-    },
-    production: {
-        username: DB_USERNAME,
-        password: DB_PASSWORD,
-        database: DB_NAME,
-        host: DB_HOST,
-        port: DB_PORT,
-        dialect: 'postgres'
+const base = {
+    username: DB_USERNAME,
+    password: DB_PASSWORD,
+    database: DB_NAME,
+    host: DB_HOST,
+    port: DB_PORT,
+    dialect: 'postgres',
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
     }
+}
+
+module.exports = {
+    development: base,
+    staging: base,
+    test: base,
+    production: base
 }
