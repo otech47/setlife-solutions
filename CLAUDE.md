@@ -1,0 +1,149 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+- `npm run dev` - start Next.js dev server at `localhost:3000` (API explorer at `localhost:3000/api/v1`)
+- `npm run build` - production build
+- `npm run start` - serve the production build
+- `npm run lint` - run `next lint` (Airbnb + React rules; see `.eslintrc.js` - note 4-space indent, single quotes)
+- `npm run order-strings` - alphabetize `constants/strings.ts` by export name
+- `npx sequelize-cli db:migrate` - apply DB migrations (config wired via `.sequelizerc`)
+- `npx sequelize-cli migration:generate --name <name>` - scaffold a new migration in `pages/api/migrations/`
+- Node version is pinned to `18.x` (see `engines` in `package.json`).
+
+There is no test runner configured in this project.
+
+## Architecture
+
+Next.js 12 monolith (pages router) that serves both the marketing/site frontend and its own GraphQL backend from one process. There is no separate server - everything runs under `next`.
+
+### Request flow
+
+- Browser → React pages under `pages/` → Apollo Client (`config/apollo-client.ts`, wired in `pages/_app.tsx`).
+- Apollo Client points at `process.env.API_V1_URL` (e.g. `http://localhost:6101/api/v1` in dev). The site talks to its *own* `/api/v1` endpoint over HTTP - frontend and backend are not co-resolved in-process.
+- `pages/api/v1.ts` is the GraphQL endpoint. It boots an `ApolloServer` (apollo-server-micro) wrapped in `micro-cors`, with `bodyParser: false` in the route config (required by apollo-server-micro).
+- The Apollo `context` spreads `db.models` so every resolver receives Sequelize models directly as context fields (no separate dataloaders / services layer).
+
+### GraphQL schema assembly
+
+- `pages/api/graphql/schema/index.ts` is the single source of truth: it imports every type from `schema/types/*` and every resolver from `schema/resolvers/*`, merges them with `@graphql-tools/merge`, and builds an executable schema.
+- **Adding a new GraphQL entity requires three coordinated edits:** create `schema/types/XType.ts`, create `schema/resolvers/XResolver.ts`, and register both in `schema/index.ts`. They will not be auto-discovered.
+- Types are defined with `gql\`\`` template literals exported via `module.exports`. Resolvers receive `(parent, args, context)` where `context` is `db.models` spread - so a resolver pulls e.g. `Project` straight out of context.
+
+### Data layer
+
+- Postgres via Sequelize. Models live in `pages/api/models/` and are registered in `pages/api/models/index.ts`, which also defines all associations in a single `associations()` call at the bottom - when adding a model, register it in the `models` object *and* add its associations there.
+- On import, `models/index.ts` calls `sequelize.sync({ alter: true })`. This means schema changes happen automatically on boot in addition to migrations - be aware that model edits will mutate the live DB even without running a migration.
+- DB credentials are read by `config/credentials.ts` from `.env` (`POSTGRES_DB_*`). Sequelize CLI uses `pages/api/models/config.js`, which imports the same credentials module - `.sequelizerc` points the CLI at this config plus the migrations/models dirs.
+- DB connection forces SSL with `rejectUnauthorized: false` (configured for hosted Postgres). Local Postgres typically does not accept SSL - expect connection failures unless your local DB has SSL enabled or you temporarily relax `dialectOptions.ssl`.
+
+### Frontend conventions
+
+- Pages: `pages/index.tsx` plus subfolders (`consultation/`, `projects/`, `services/`, `service-packages/`, `contributor-inquiry/`). `_app.tsx` wraps every page in `ApolloProvider` + a global `Layout` and conditionally injects the Google Analytics gtag script.
+- Reusable React components are flat in `components/` (no per-component folders). TypeScript prop interfaces are split out into `interfaces/` (e.g. `ProjectProps.ts`).
+- GraphQL operations the *frontend* uses are in `operations/queries/` and `operations/mutations/` as `gql` template literals - keep new client-side queries there rather than inline in components.
+- Static copy lives in `constants/strings.ts` as named exports. Run `npm run order-strings` after adding new ones; the script alphabetizes by export name.
+- Styling: Tailwind (see `tailwind.config.js`) plus SCSS under `styles/` (entry: `styles/index.scss`, imported in `_app.tsx`).
+
+### Other backend routes
+
+- `pages/api/contributor-inquiry-form.ts`, `pages/api/sendgrid.ts`, `pages/api/webhooks/discord.ts` - non-GraphQL REST handlers for email + Discord notifications. SendGrid via `@sendgrid/mail`, Discord via `discord-webhook-node`.
+- `utilities/s3.ts` wraps `aws-sdk` for asset uploads (project/service images stored on S3, surfaced via `*_image_url` columns on the models).
+
+### Env vars
+
+Required for full functionality (see `.env.example`): `POSTGRES_DB_*`, `API_V1_URL`, `SENDGRID_API_KEY`, `CONSULTATION_FORM_EMAIL`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `DISCORD_WEBHOOK`, `NEXT_PUBLIC_GOOGLE_ANALYTICS`. Only a curated subset is exposed to the client through `env` in `next.config.js` - DB credentials are intentionally **not** in that list (a recent commit removed them; do not re-add).
+
+## Deployment
+
+**Target: Heroku, manual `git push` deploys, no auto-deploy from GitHub.** Validated against the live Heroku environment 2026-05-27.
+
+### The pipeline
+
+Heroku pipeline `setlife-solutions`, owned by team `setlife-development`. Two apps:
+
+| Stage | App name | URL | Git remote | Status |
+|---|---|---|---|---|
+| **Production** | `setlife-solutions` | `www.setlife.solutions` | `https://git.heroku.com/setlife-solutions.git` | 1 Basic web dyno, last deploy 2026-04-01 (`8fcec7e`) |
+| **Staging** | `setlife-solutions-staging` | `staging.setlife.solutions` | `https://git.heroku.com/setlife-solutions-staging.git` | **Normally scaled to 0 dynos to save billing.** Scale up before use, scale down when done (see below). |
+
+Both apps: `heroku/nodejs` buildpack on the `heroku-24` stack, `heroku-postgresql:essential-0` addon. **Review Apps are disabled** (and should stay disabled). GitHub auto-deploy is not configured - every release on prod has been authored by `oscar@setlife.network` via manual `git push`.
+
+### What's in the repo
+
+- **`Procfile`** - `web: npm start`. Build runs automatically via the buildpack (`npm run build` → `next build`) because a `build` script exists in `package.json`.
+- **`app.json`** - Heroku Platform API manifest. Declares the buildpack, the `heroku-postgresql` addon, and the env var contract. Only consumed by `heroku create --manifest` / Review Apps / the Deploy button - *not* read on normal `git push heroku master`. Useful as the canonical env var inventory and for future fresh-account bootstrapping.
+
+### How to deploy a code change
+
+The flow is **staging first, verify, then promote the same slug to prod**. Never push directly to prod.
+
+**Step 1 - preflight (catches the recurring build-breakage failure mode from PRs #281 / #282):**
+```bash
+npm run build    # MUST pass locally. Heroku has no CI; if next build fails on the slug, the deploy fails after the fact.
+```
+
+**Step 2 - add the Heroku git remotes (one-time per checkout):**
+```bash
+heroku git:remote -a setlife-solutions-staging -r heroku-staging
+heroku git:remote -a setlife-solutions         -r heroku-prod
+```
+
+**Step 3 - deploy to staging:**
+```bash
+git push heroku-staging HEAD:master
+# Staging is normally scaled to 0 to save billing. To run + verify:
+heroku ps:scale web=1 -a setlife-solutions-staging
+heroku logs --tail -a setlife-solutions-staging   # watch boot
+# Wait ~15s after boot before hitting /api/v1 - see cold-start race in Landmines.
+# Verify at https://staging.setlife.solutions
+# When done, scale back to 0 (dyno billing stops, ~$5/mo Postgres continues):
+heroku ps:scale web=0 -a setlife-solutions-staging
+```
+
+**Turning staging on/off (without redeploying):** scaling is independent of the deployed slug. Use this any time you want to verify staging or just leave it cold:
+```bash
+heroku ps:scale web=1 -a setlife-solutions-staging   # ON  - ~$0.01/hr Basic dyno
+heroku ps:scale web=0 -a setlife-solutions-staging   # OFF - dyno billing stops
+```
+The `heroku-postgresql:essential-0` addon (~$5/mo) keeps running regardless of dyno state, so the DB persists across on/off cycles.
+
+**Step 4 - promote the verified slug to production** (do NOT `git push heroku-prod` - promotion copies the exact slug from staging, eliminating "works in staging, fails in prod" build differences):
+```bash
+heroku pipelines:promote -a setlife-solutions-staging
+```
+
+**Step 5 - verify prod and have a rollback ready:**
+```bash
+heroku logs --tail -a setlife-solutions    # watch boot
+heroku releases -a setlife-solutions -n 5  # confirm new release is current
+# if anything is wrong, immediate rollback:
+heroku releases:rollback v<previous> -a setlife-solutions
+```
+
+### Guardrails for agents operating this workflow
+
+These are not suggestions. Future Claude sessions deploying this app MUST follow them.
+
+1. **Confirm with the user before any `heroku` command that mutates state.** Mutating commands include `git push heroku-*`, `pipelines:promote`, `config:set`, `ps:scale`, `addons:create`, `addons:destroy`, `reviewapps:enable`, `releases:rollback`, `apps:destroy`. Read-only commands (`apps:info`, `releases`, `ps`, `logs`, `config --json | jq keys`) are fine to run without confirmation.
+2. **Never run `heroku config -a <app>` without `--json | jq 'keys[]'`.** Bare `heroku config` dumps every secret value (SendGrid key, DB password, Discord webhook) into the conversation context. Always pipe to `jq keys` when you only need names. Use `heroku config:get <SPECIFIC_KEY>` if you need a single value.
+   - **Also: `heroku config:set` echoes the values it just set into stdout.** When setting a secret, append `>/dev/null` or set it via the Heroku dashboard. Anti-pattern: `heroku config:set PASSWORD=...` - the password lands in your logs. Correct: `heroku config:set PASSWORD=... -a <app> >/dev/null`.
+3. **Never push to `heroku-prod` directly.** Always staging → promote. The pipeline exists specifically to avoid skipping verification.
+4. **Always run `npm run build` locally before pushing anything.** There is no CI. Build failures hit Heroku and the previous slug keeps serving - easy to assume success.
+5. **Before promoting, confirm staging actually came up.** `heroku ps:scale web=1` + `heroku logs --tail` + load the staging URL in a browser-equivalent (or ask the user to). A successful `git push` only proves the slug compiled, not that the app boots.
+6. **For prod deploys specifically: get explicit user go-ahead on the promotion command, in writing in the chat.** Confirmation for staging is lighter; for prod it's a hard gate.
+
+### Known landmines
+
+- **`sequelize.sync({ alter: true })` in `pages/api/models/index.ts` runs on every dyno boot.** Editing a model file IS a schema migration in production - the next deploy will `ALTER TABLE` based on whatever the models say, with no review, no migration file, no rollback path. Migrations in `pages/api/migrations/` are NEVER executed by Heroku (no `release` line in `Procfile`). **If your change touches `pages/api/models/`, treat the deploy as a database migration and triple-check it.**
+- **No Postgres backups are configured.** As of last check, `heroku pg:backups -a setlife-solutions` showed zero captures and no schedule. The `essential-0` plan supports free daily backups but they're not enabled. **Before any deploy that touches models, run `heroku pg:backups:capture -a setlife-solutions`.** To enable a daily schedule once: `heroku pg:backups:schedule DATABASE --at "02:00 America/New_York" -a setlife-solutions`.
+- **Cold-start race on first request after boot.** Next.js lazy-loads API routes, so the first `POST /api/v1` after a fresh dyno triggers `models/index.ts` import → `sequelize.authenticate()` → `sync({ alter: true })` in parallel with the GraphQL resolver. If the resolver runs before sync finishes, you get `relation "X" does not exist` (or a 30s H12 timeout if connection itself hangs). **Wait ~15s after boot before testing, or send one throwaway request to warm it up.** This is most visible on staging cold-starts.
+- **The Next.js build hard-requires `DISCORD_WEBHOOK` to be set to *something*.** `pages/api/webhooks/discord.ts` constructs `new Webhook(process.env.DISCORD_WEBHOOK)` at module top level, which crashes the build during static page collection if the var is undefined. For non-prod environments where you don't want real Discord posts, set a placeholder URL: `heroku config:set DISCORD_WEBHOOK="https://discord.com/api/webhooks/0/placeholder" -a <app> >/dev/null`.
+- **Staging's `DATABASE_URL` and `HEROKU_POSTGRESQL_BRONZE_URL` point at DIFFERENT databases.** The current addon is attached as the legacy `HEROKU_POSTGRESQL_BRONZE` alias (set during Jan 2025 reprovisioning); `DATABASE_URL` is a stale manual config var pointing at a decommissioned host. **The current real DB on staging is `HEROKU_POSTGRESQL_BRONZE_URL`.** If you need to re-derive `POSTGRES_DB_*` vars on staging, parse them from `HEROKU_POSTGRESQL_BRONZE_URL`, NOT from `DATABASE_URL`. Prod uses the standard `DATABASE` alias and doesn't have this problem.
+- **`POSTGRES_DB_*` vars are hand-populated and can drift from the real addon.** Any DB addon change (plan upgrade, rotation, fork, reprovisioning) updates the addon's URL but leaves the manually-set `POSTGRES_DB_*` pointing at the old DB. Symptom: `connect ETIMEDOUT` on whatever IP the stale host resolves to. Re-derive from the current addon URL (`DATABASE_URL` on prod, `HEROKU_POSTGRESQL_BRONZE_URL` on staging) after any addon change.
+- **Staging config vars diverge from prod.** Staging uses a placeholder `DISCORD_WEBHOOK` (no real Discord posts), and `NEXT_PUBLIC_GOOGLE_ANALYTICS` is unset. "Works in staging" doesn't fully predict prod for these features.
+- **AWS keys (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) are not set in prod or staging.** The contributor inquiry form's S3 upload is silently broken in production. `app.json` marks them `required: false` to match reality; don't add them to satisfy a feature without checking that S3 is actually expected to work.
+- **`API_V1_URL` self-references the app's own hostname.** Required env var, must be set after app creation to `https://<app-domain>/api/v1`. Bootstrapping a fresh app from `app.json` cannot auto-populate this. Be careful: at one point staging's `API_V1_URL` pointed at the prod URL - meaning the staging frontend was reading from the prod DB through prod's API. Always confirm `heroku config:get API_V1_URL -a setlife-solutions-staging` matches the staging domain after any change.
+- **No CI, no test suite.** All correctness verification is manual.
