@@ -40,11 +40,7 @@ const Button = ({
 
     const styleProps = variants[variant || 'primary'];
 
-    const buttonContent = (
-        <>
-            {children}
-        </>
-    );
+    const buttonContent = children;
 
     if (link) {
         return (
@@ -92,4 +88,3 @@ Button.defaultProps = {
 }
 
 export default Button
-
