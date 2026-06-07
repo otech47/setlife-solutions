@@ -11,9 +11,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run order-strings` - alphabetize `constants/strings.ts` by export name
 - `npx sequelize-cli db:migrate` - apply DB migrations (config wired via `.sequelizerc`)
 - `npx sequelize-cli migration:generate --name <name>` - scaffold a new migration in `pages/api/migrations/`
+- `npm run test:visual` - Playwright visual-regression diff of staging vs prod (see Testing below)
 - Node version is pinned to `18.x` (see `engines` in `package.json`).
 
-There is no test runner configured in this project.
+## Testing
+
+There is no unit/integration test runner. The only automated tests are the
+Playwright **visual-regression** suite under `tests/visual/` (see
+`tests/visual/README.md`).
+
+- Purpose: guard against unintended *stylistic* regressions by pixel-diffing
+  every route on **staging** against the same route on **prod**. Prod is the
+  model; staging must match it. Read-only - no forms are submitted, no writes.
+- It compares two LIVE environments, so **staging must be scaled up** first
+  (`heroku ps:scale web=1 -a setlife-solutions-staging`, wait ~15s for the
+  cold-start race, then scale back to 0 when done). This is the gate to run
+  before `heroku pipelines:promote`.
+- `npm run test:visual` enumerates project/service detail-page IDs from prod's
+  GraphQL (`tests/visual/generate-routes.mjs` -> git-ignored
+  `routes.generated.json`), then runs the diff; `npm run test:visual:report`
+  opens the HTML report with prod/staging/diff images.
+- It does NOT run on Heroku (no browser in the slug) and is not part of the
+  build - it is a local/CI pre-promote check. Adding `@playwright/test` as a
+  devDependency does not affect the production deploy.
 
 ## Architecture
 
@@ -110,6 +130,7 @@ heroku ps:scale web=1 -a setlife-solutions-staging
 heroku logs --tail -a setlife-solutions-staging   # watch boot
 # Wait ~15s after boot before hitting /api/v1 - see cold-start race in Landmines.
 # Verify at https://staging.setlife.solutions
+npm run test:visual   # pixel-diff staging vs prod; review any flagged routes (see Testing)
 # When done, scale back to 0 (dyno billing stops, ~$5/mo Postgres continues):
 heroku ps:scale web=0 -a setlife-solutions-staging
 ```

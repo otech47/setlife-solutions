@@ -8,6 +8,16 @@
 # testing
 /coverage
 
+# playwright (visual regression)
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/blob-report/
+# playwright MCP browser scratch (screenshots, snapshots, console logs)
+/.playwright-mcp/
+# dynamic route list is regenerated from prod on every run
+/tests/visual/routes.generated.json
+
 # next.js
 /.next/
 /out/
