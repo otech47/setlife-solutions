@@ -34,43 +34,39 @@ const ServicePackageTile = ({
     } = servicePackage
 
     return (
-        <div 
-            className='ServicePackageTile bg-solid-white p-8 rounded-lg'
+        <div
+            className='ServicePackageTile flex flex-col h-full bg-solid-white p-8 rounded-lg gap-6'
             key={id}
         >
-            <div 
-                className='grid grid-flow-row auto-rows-max gap-8'
+            <div
+                className='container rounded-full bg-primary h-24 w-24 mx-auto'
             >
-                <div 
-                    className='container rounded-full bg-primary h-24 w-24 m-auto'
-                >
-                    {idx && (
-                        <div className='package-number m-auto'>
-                            <Headline color='solid-white' alignment='text-center'>
-                                {`${idx}`}
-                            </Headline>
-                        </div>
-                    )}
-                </div>
-                <Subtitle variant='s' alignment='text-center'>
-                    { name }
-                </Subtitle>
-                <Paragraph>
-                    { description }  
-                </Paragraph>
-                {additional_notice && (
-                    <div className='grid grid-cols-12'>
-                        <div className='col-span-2 my-auto mr-auto'>
-                            <CheckTile />
-                        </div>
-                        <div className='col-span-9'>
-                            <Paragraph>
-                                { additional_notice }
-                            </Paragraph>
-                        </div>
+                {idx && (
+                    <div className='package-number m-auto'>
+                        <Headline color='solid-white' alignment='text-center'>
+                            {`${idx}`}
+                        </Headline>
                     </div>
                 )}
-                <Paragraph color='primary'>
+            </div>
+            <Subtitle variant='s' alignment='text-center'>
+                { name }
+            </Subtitle>
+            <Paragraph>
+                { description }
+            </Paragraph>
+            {additional_notice && (
+                <div className='flex items-start gap-3'>
+                    <div className='shrink-0 mt-1'>
+                        <CheckTile />
+                    </div>
+                    <Paragraph>
+                        { additional_notice }
+                    </Paragraph>
+                </div>
+            )}
+            <div className='mt-auto flex flex-col gap-3 pt-2'>
+                <Paragraph alignment='text-center' color='primary'>
                     { meeting_frequency }
                 </Paragraph>
                 {estimated_cost && (

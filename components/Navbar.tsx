@@ -12,9 +12,9 @@ const renderNavItems = () => {
     return (
         NAV_ITEMS.map((item) => {
             return (
-                <a 
-                    className='text-2xl font-bold my-4 text-primary md:mx-4 md:text-base md:text-solid-black md:my-0' 
-                    href={item.link} 
+                <a
+                    className='text-2xl font-bold my-4 text-primary whitespace-nowrap md:mx-4 md:text-base md:text-solid-black md:my-0 md:transition-colors md:duration-200 md:hover:text-primary'
+                    href={item.link}
                 >
                     {item.name}
                 </a>
@@ -75,7 +75,7 @@ export default function Navbar({
                     open={openMobileNavbar}
                     setOpen={setOpenMobileNavbar}
                 />
-                <div className="hidden md:flex">
+                <div className="hidden md:flex md:items-center">
                     { renderNavItems() }
                 </div>
             </div>

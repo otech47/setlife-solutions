@@ -23,16 +23,16 @@ const ServiceTile = ({
 
     return (
         <div
-            className='ServiceTile grid grid-cols-1 gap-4 rounded-2xl px-6 py-6 bg-solid-white'
+            className='ServiceTile flex flex-col gap-4 rounded-2xl p-6 bg-solid-white h-full w-full shadow-sm transition-shadow duration-200 hover:shadow-lg cursor-pointer'
             onClick={() => {
                 router.push(url)
             }}
         >
-            <div className=''>
+            <div className='mt-2'>
                 {imageUrl
                     ? (
                         <div
-                            className='rounded-full bg-cover h-24 w-24 m-auto'
+                            className='rounded-full bg-cover bg-center h-24 w-24 m-auto'
                             style={{ backgroundImage: `url(${imageUrl})` }}
                         />
                     ) : (
@@ -45,12 +45,12 @@ const ServiceTile = ({
                     { name }
                 </Subtitle>
             </div>
-            <div className=''>
+            <div className='grow'>
                 <Paragraph alignment='text-center'>
                     { description }
                 </Paragraph>
             </div>
-            <div className='text-right'>
+            <div className='text-right mt-auto'>
                 <a href={url}>
                     <Paragraph variant='sm' alignment='text-right' color='primary'>
                         { LEARN_MORE }

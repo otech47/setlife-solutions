@@ -26,41 +26,35 @@ const TestimonialTile = ({
 
     return (
         <div
-            className='TestimonialsTile grid grid-flow-row auto-rows-max gap-4 rounded-2xl border-solid border rounded-lg border-primary p-8 bg-solid-white max-w-md w-max h-full justify-items-center relative'
-        >  
-            <div className='h-fit'>
-                <div 
-                    className='rounded-full bg-contain h-20 w-20 '
-                    style={{ backgroundImage: `url(${person_image_url})` }} 
+            className='TestimonialsTile flex flex-col justify-center items-center gap-5 rounded-2xl border border-primary p-8 bg-solid-white max-w-md w-max h-full'
+        >
+            {person_image_url && (
+                <div
+                    className='rounded-full bg-contain bg-no-repeat bg-center h-20 w-20'
+                    style={{ backgroundImage: `url(${person_image_url})` }}
                 />
+            )}
+            <div className='flex items-center gap-3'>
+                {project.logo_image_url && (
+                    <div
+                        className='rounded-full bg-contain h-9 w-9 bg-no-repeat bg-center bg-black'
+                        style={{ backgroundImage: `url(${project.logo_image_url})` }}
+                    />
+                )}
+                <Subtitle variant='s' alignment='text-center' color='solid-black'>
+                    { project.name }
+                </Subtitle>
             </div>
-            <div className='flex gap-4 justify-items-center '>
-                {project.logo_image_url
-                    ? (
-                        <div
-                            className='rounded-full bg-contain h-9 w-9 m-left bg-no-repeat bg-center bg-black'
-                            style={{ backgroundImage: `url(${project.logo_image_url})` }}
-                        />
-                    ) : (
-                        <div className='rounded-full bg-primary h-24 w-24 m-auto' />
-                    )
-                }
-                <div className='w-fit'>                
-                    <Subtitle variant='s' alignment='text-center' color='solid-black'>
-                        { project.name }
-                    </Subtitle>
-                </div>
-            </div>     
-            <div className=''>
+            <div className='grow'>
                 <Paragraph alignment='text-center'>
                     { testimony }
                 </Paragraph>
             </div>
-            <div className=''>
+            <div className='mt-auto'>
                 <Subtitle variant='xs' alignment='text-center'>
                     { person_name }
                 </Subtitle>
-            </div>            
+            </div>
         </div>
     )
 }

@@ -61,7 +61,7 @@ const ProjectTile = ({
                     </div>
                 </div>
             </div>
-            <div className='mt-4 h-24 text-ellipsis overflow-hidden'>
+            <div className='description mt-4'>
                 { description }
             </div>
         </div>

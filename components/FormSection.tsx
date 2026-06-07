@@ -33,15 +33,15 @@ const FormSection = ({
     return (
         <div className='FormSection'>
             <button className={`accordion ${setActive}`} type='button' onClick={toggleAccordion}>
-                <Section color='light-gray'>
-                    <div className='grid grid-cols-2'>
+                <Section color='light-gray' paddingTop='pt-6' paddingBottom='pb-6'>
+                    <div className='grid grid-cols-2 items-center'>
                         <div className='grid grid-cols-1 w-fit gap-2'>
                             <Subtitle variant='s'>
                                 { title }
                             </Subtitle>
                             <div className='h-2 bg-primary' />
                         </div>
-                        <div>
+                        <div className='flex justify-end items-center'>
                             <ChevronIcon className={`${setRotate}`} width={10} fill='#777' />
                         </div>
                     </div>
