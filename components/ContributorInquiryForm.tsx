@@ -13,14 +13,15 @@ import {
     CANCEL_ICON,
     CONTRIBUTOR_INQUIRY_IMAGE
 } from '../constants';
-import { 
+import {
     ADD_MORE_DETAILS,
-    EMAIL, 
-    LINK_TO_YOUR_WORK, 
-    OPTIONAL, 
-    PLEASE_FILL_OUT_CONTRIBUTE_FORM, 
-    SUBMIT, 
-    SUBMIT_CV 
+    EMAIL,
+    LINK_TO_YOUR_WORK,
+    OPTIONAL,
+    PLEASE_FILL_OUT_CONTRIBUTE_FORM,
+    SUBMIT,
+    SUBMIT_CV,
+    CONTRIBUTOR_INQUIRY_INTRO
 } from '../constants/strings';
 
 const ContributorInquiryForm = ({}) => {
@@ -121,14 +122,13 @@ const ContributorInquiryForm = ({}) => {
         ]
         return basicInformationFields.map(input => {
             return (
-                <div>
+                <div key={input.name}>
                     <label
                         className={`
-                            relative block p-3 border-2 rounded-full
-                            ${(input.type == 'email' && emailError && email) ? 'border-red-600' : 'border-primary'}
+                            relative block p-3 border rounded-full transition-all duration-150
+                            ${(input.type == 'email' && emailError && email) ? 'border-red-500' : 'border-gray-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20'}
                         `}
                         htmlFor={input.name}
-                        key={input.name}
                     >
                         <input
                             className='w-full px-4 pt-3.5 pb-0 text-sm placeholder-transparent border-none focus:ring-0 peer'
@@ -158,14 +158,14 @@ const ContributorInquiryForm = ({}) => {
                 </div>
                 <div>
                     <Paragraph>
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi ipsum vitae laudantium obcaecati quia! Cum, adipisci sit placeat odit, dolorum, quas nulla dolores ea tempore explicabo quod animi. Quos, incidunt?
+                        {CONTRIBUTOR_INQUIRY_INTRO}
                     </Paragraph>
                 </div>
                 {renderInputs()}
                 <div>
                     <div className='grid grid-cols-4 gap-4'>
                         <div className='col-span-3'>
-                            <span className={`block p-4 border-2 rounded-full border-primary ${submitCVName ? 'bg-primary' : 'bg-solid-white'}`}>
+                            <span className={`block p-4 border rounded-full transition-colors ${submitCVName ? 'border-primary bg-primary' : 'border-gray-200 bg-solid-white'}`}>
                                 <div className='grid grid-cols-7'>
                                     <div className='col-span-6 truncate text-solid-white text-ellipsis overflow-hidden'>
                                         <span className={`text-sm px-4 font-medium left-3 ${submitCVName ? 'text-solid-white' : 'text-gray-500'}`}>
