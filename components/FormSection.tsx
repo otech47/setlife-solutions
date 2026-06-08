@@ -12,7 +12,9 @@ interface FormSectionProps {
     step?: number,
     complete?: boolean,
     optional?: boolean,
-    defaultOpen?: boolean
+    defaultOpen?: boolean,
+    isOpen?: boolean,
+    onToggle?: ((next: boolean) => void) | null
 }
 
 const FormSection = ({
@@ -21,10 +23,21 @@ const FormSection = ({
     step,
     complete,
     optional,
-    defaultOpen
+    defaultOpen,
+    isOpen,
+    onToggle
 }: FormSectionProps) => {
 
-    const [open, setOpen] = useState(Boolean(defaultOpen))
+    // Supports both uncontrolled (its own state) and controlled (parent passes
+    // isOpen + onToggle) use, so a page-level CTA can open a specific section.
+    const [internalOpen, setInternalOpen] = useState(Boolean(defaultOpen))
+    const open = isOpen !== undefined ? isOpen : internalOpen
+
+    const toggle = () => {
+        const next = !open
+        if (onToggle) onToggle(next)
+        if (isOpen === undefined) setInternalOpen(next)
+    }
 
     const contentId = `form-section-${title.replace(/\s+/g, '-').toLowerCase()}`
 
@@ -44,7 +57,7 @@ const FormSection = ({
                 type='button'
                 aria-expanded={open}
                 aria-controls={contentId}
-                onClick={() => setOpen(prev => !prev)}
+                onClick={toggle}
             >
                 <Section color='light-gray' paddingTop='pt-5' paddingBottom='pb-5'>
                     <div className='flex items-center gap-4'>
@@ -96,7 +109,9 @@ FormSection.defaultProps = {
     step: null,
     complete: false,
     optional: false,
-    defaultOpen: false
+    defaultOpen: false,
+    isOpen: undefined,
+    onToggle: null
 }
 
 export default FormSection

@@ -28,7 +28,8 @@ import {
     PROJECT_GOALS,
     FIELDS_WITH_ARE_REQUIRED,
     COMPLETE_REQUIRED_SECTIONS_TO_SUBMIT,
-    REQUIRED_STEPS_COMPLETE
+    REQUIRED_STEPS_COMPLETE,
+    START_NOW
 } from '../../constants/strings'
 
 interface ServiceTypesFormProps {
@@ -52,6 +53,7 @@ const ConsultationPage: NextPage = () => {
     const [serviceInformationError, setServiceInformationError] = useState(true)
     const [budgetTimelineError, setBudgetTimelineError] = useState(true)
     const [disabledButton, setDisabledButton] = useState(true)
+    const [contactOpen, setContactOpen] = useState(false)
     const [projectGoals, setProjectGoals] = useState<string>('')
     const [constraints, setConstraints] = useState<string>('')
 
@@ -100,6 +102,12 @@ const ConsultationPage: NextPage = () => {
     useEffect(() => {
         setConstraints(timeline.length ? timeline.join('. ') : '')
     }, [timeline])
+
+    const handleStartNow = () => {
+        setContactOpen(true)
+        const header = document.querySelector('button[aria-controls="form-section-contact-information"]')
+        if (header) header.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
 
     const handleSubmit = async (e: any) => {
         e.preventDefault()
@@ -150,9 +158,20 @@ const ConsultationPage: NextPage = () => {
                         />
                     </div>
                 </div>
+                <div className='mt-8'>
+                    <Button variant='tertiary' onClick={handleStartNow} className='w-full sm:w-auto sm:px-16 text-lg'>
+                        {START_NOW}
+                    </Button>
+                </div>
             </Section>
             <form onSubmit={handleSubmit}>
-                <FormSection title={CONTACT_INFORMATION} step={1} complete={contactComplete} defaultOpen>
+                <FormSection
+                    title={CONTACT_INFORMATION}
+                    step={1}
+                    complete={contactComplete}
+                    isOpen={contactOpen}
+                    onToggle={setContactOpen}
+                >
                     <ContactInformation
                         setContactInformation={setContactInformation}
                         setContactInformationError={setContactInformationError}
