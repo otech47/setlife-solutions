@@ -26,13 +26,19 @@ Playwright **visual-regression** suite under `tests/visual/` (see
 - It compares two LIVE environments, so **staging must be scaled up** first
   (`heroku ps:scale web=1 -a setlife-solutions-staging`, wait ~15s for the
   cold-start race, then scale back to 0 when done). This is the gate to run
-  before `heroku pipelines:promote`.
+  before deploying prod.
+- Genuinely random regions (e.g. the shuffled `.ProjectSimilarWork` section on
+  project detail pages) are **hidden** (`display:none`) during capture, not
+  paint-masked - a mask keeps the element's box, so a variable-height random
+  region still shifts the layout below it. Their styling is covered elsewhere
+  (`.ProjectSimilarWork` tiles use `ProjectTile`, compared in full on
+  `/projects`). See `tests/visual/lib/masks.ts`.
 - `npm run test:visual` enumerates project/service detail-page IDs from prod's
   GraphQL (`tests/visual/generate-routes.mjs` -> git-ignored
   `routes.generated.json`), then runs the diff; `npm run test:visual:report`
   opens the HTML report with prod/staging/diff images.
 - It does NOT run on Heroku (no browser in the slug) and is not part of the
-  build - it is a local/CI pre-promote check. Adding `@playwright/test` as a
+  build - it is a local/CI pre-deploy check. Adding `@playwright/test` as a
   devDependency does not affect the production deploy.
 
 ## Architecture
@@ -66,7 +72,8 @@ Next.js 12 monolith (pages router) that serves both the marketing/site frontend 
 - Reusable React components are flat in `components/` (no per-component folders). TypeScript prop interfaces are split out into `interfaces/` (e.g. `ProjectProps.ts`).
 - GraphQL operations the *frontend* uses are in `operations/queries/` and `operations/mutations/` as `gql` template literals - keep new client-side queries there rather than inline in components.
 - Static copy lives in `constants/strings.ts` as named exports. Run `npm run order-strings` after adding new ones; the script alphabetizes by export name.
-- Styling: Tailwind (see `tailwind.config.js`) plus SCSS under `styles/` (entry: `styles/index.scss`, imported in `_app.tsx`).
+- Styling: Tailwind (see `tailwind.config.js`) plus SCSS under `styles/` (entry: `styles/index.scss`, imported in `_app.tsx`). The brand palette is teal/black/white/gray; `tailwind.config.js` extends it with shades/utilities the UI relies on — `primary-dark`/`primary-tint`, the `teal-gradient`/`hero-glow` backgrounds, a `soft`/`card`/`card-hover`/`glow` shadow scale, and a `fade-up` keyframe. Reuse these rather than adding new one-off colors.
+- Service tiles render icons from a bundled, keyword-matched set (`components/ServiceIcon.tsx`) because services have no `tile_image_url` in the DB and S3 isn't wired up; a real `tile_image_url` still takes precedence if one is added. `Button` supports `variant`/`type`/`onClick`; `FormSection` (the consultation accordion) supports controlled `isOpen`/`onToggle` as well as uncontrolled use.
 
 ### Other backend routes
 
@@ -86,7 +93,8 @@ Required for full functionality (see `.env.example`): `POSTGRES_DB_*`, `API_V1_U
 - **`develop`** is the integration branch. All work (features, fixes, hotfixes, doc changes) lands here via PR. Open PRs against `develop`, not `master`.
 - **`master`** is a mirror of what is currently deployed to Heroku production. Nothing lands on `master` except by merging `develop` into it as part of a prod deploy.
 - **Staging deploys come from `develop`** (or any feature branch you want to test). Push to `heroku-staging` with `git push heroku-staging <branch>:master`.
-- **Prod deploys come from `master`** via `heroku pipelines:promote`. The flow is: merge `develop` into `master`, then promote the staging slug (which was built from develop) to prod. `master` HEAD should always equal the SHA running on `setlife-solutions`.
+- **Prod deploys come from `master`** by **building on prod** (`git push heroku-prod master`), **NOT** `heroku pipelines:promote`. The flow is: merge `develop` into `master`, then push `master` to the prod remote so Heroku rebuilds the slug with prod's config. `master` HEAD should always equal the SHA running on `setlife-solutions`.
+  - **Why not promote (critical, verified 2026-06-08):** `next.config.js` inlines its `env` vars — including `API_V1_URL` — into the **client bundle at build time**. Staging builds bake in staging's `API_V1_URL` (`staging.setlife.solutions`). `pipelines:promote` copies that exact staging slug to prod **without rebuilding**, so prod would serve a bundle that calls the **staging** API/DB (and staging is normally scaled to 0 → prod data breaks). Building on prod bakes the correct `www` API. The prod release history confirms this is the real model: every release is a `Deploy <sha>` (a git push build), never a `Promote`.
 
 This means: if you look at `git log master` and the latest commit is not the SHA in `heroku releases -a setlife-solutions`, something has drifted and needs reconciling before the next deploy.
 
@@ -96,7 +104,7 @@ Heroku pipeline `setlife-solutions`, owned by team `setlife-development`. Two ap
 
 | Stage | App name | URL | Git remote | Status |
 |---|---|---|---|---|
-| **Production** | `setlife-solutions` | `www.setlife.solutions` | `https://git.heroku.com/setlife-solutions.git` | 1 Basic web dyno, last deploy 2026-04-01 (`8fcec7e`) |
+| **Production** | `setlife-solutions` | `www.setlife.solutions` | `https://git.heroku.com/setlife-solutions.git` | 1 Basic web dyno, last deploy 2026-06-08 (`3ebee6a`, release v92) |
 | **Staging** | `setlife-solutions-staging` | `staging.setlife.solutions` | `https://git.heroku.com/setlife-solutions-staging.git` | **Normally scaled to 0 dynos to save billing.** Scale up before use, scale down when done (see below). |
 
 Both apps: `heroku/nodejs` buildpack on the `heroku-24` stack, `heroku-postgresql:essential-0` addon. **Review Apps are disabled** (and should stay disabled). GitHub auto-deploy is not configured - every release on prod has been authored by `oscar@setlife.network` via manual `git push`.
@@ -108,7 +116,7 @@ Both apps: `heroku/nodejs` buildpack on the `heroku-24` stack, `heroku-postgresq
 
 ### How to deploy a code change
 
-The flow is **staging first, verify, then promote the same slug to prod**. Never push directly to prod.
+The flow is **staging first, verify, then build the same commit on prod** with `git push heroku-prod master`. Do **NOT** `heroku pipelines:promote` — it copies staging's slug (with staging's build-time-inlined `API_V1_URL`) to prod and points prod at the staging DB. See the "Why not promote" note under Branch model.
 
 **Step 1 - preflight (catches the recurring build-breakage failure mode from PRs #281 / #282):**
 ```bash
@@ -142,14 +150,14 @@ heroku ps:scale web=0 -a setlife-solutions-staging   # OFF - dyno billing stops
 ```
 The `heroku-postgresql:essential-0` addon (~$5/mo) keeps running regardless of dyno state, so the DB persists across on/off cycles.
 
-**Step 4 - merge develop into master, then promote the verified slug to production** (do NOT `git push heroku-prod` - promotion copies the exact slug from staging, eliminating "works in staging, fails in prod" build differences):
+**Step 4 - merge develop into master, then build it on prod** (`git push heroku-prod`, NOT promote - promotion would ship staging's build-time-inlined `API_V1_URL` and point prod at the staging DB):
 ```bash
 git checkout master && git pull
 git merge --ff-only develop   # fast-forward only; if it fails, develop has not absorbed master's history yet
 git push origin master
-heroku pipelines:promote -a setlife-solutions-staging
+git push heroku-prod master   # rebuilds the slug on prod with prod's env (correct www API_V1_URL baked in)
 ```
-The `git merge --ff-only` step is what keeps the model honest: master HEAD will equal the slug's source SHA after the promote completes.
+The `git merge --ff-only` step is what keeps the model honest: master HEAD will equal the slug's source SHA after the build completes. After deploying, sanity-check the baked API target: the prod client bundle must reference only `www.setlife.solutions/api/v1`, never `staging` (grep the `_app-*.js` chunk).
 
 **Step 5 - verify prod and have a rollback ready:**
 ```bash
@@ -166,10 +174,10 @@ These are not suggestions. Future Claude sessions deploying this app MUST follow
 1. **Confirm with the user before any `heroku` command that mutates state.** Mutating commands include `git push heroku-*`, `pipelines:promote`, `config:set`, `ps:scale`, `addons:create`, `addons:destroy`, `reviewapps:enable`, `releases:rollback`, `apps:destroy`. Read-only commands (`apps:info`, `releases`, `ps`, `logs`, `config --json | jq keys`) are fine to run without confirmation.
 2. **Never run `heroku config -a <app>` without `--json | jq 'keys[]'`.** Bare `heroku config` dumps every secret value (SendGrid key, DB password, Discord webhook) into the conversation context. Always pipe to `jq keys` when you only need names. Use `heroku config:get <SPECIFIC_KEY>` if you need a single value.
    - **Also: `heroku config:set` echoes the values it just set into stdout.** When setting a secret, append `>/dev/null` or set it via the Heroku dashboard. Anti-pattern: `heroku config:set PASSWORD=...` - the password lands in your logs. Correct: `heroku config:set PASSWORD=... -a <app> >/dev/null`.
-3. **Never push to `heroku-prod` directly.** Always staging → promote. The pipeline exists specifically to avoid skipping verification.
+3. **Deploy prod by building on prod (`git push heroku-prod master`), NOT `pipelines:promote`.** Always verify on staging first, but ship to prod with a fresh prod build — promoting the staging slug bakes staging's `API_V1_URL` into prod and points it at the staging DB (see Branch model). Never skip the staging verification step.
 4. **Always run `npm run build` locally before pushing anything.** There is no CI. Build failures hit Heroku and the previous slug keeps serving - easy to assume success.
-5. **Before promoting, confirm staging actually came up.** `heroku ps:scale web=1` + `heroku logs --tail` + load the staging URL in a browser-equivalent (or ask the user to). A successful `git push` only proves the slug compiled, not that the app boots.
-6. **For prod deploys specifically: get explicit user go-ahead on the promotion command, in writing in the chat.** Confirmation for staging is lighter; for prod it's a hard gate.
+5. **Before deploying prod, confirm staging actually came up.** `heroku ps:scale web=1` + `heroku logs --tail` + load the staging URL in a browser-equivalent (or ask the user to). A successful `git push` only proves the slug compiled, not that the app boots.
+6. **For prod deploys specifically: get explicit user go-ahead on the deploy, in writing in the chat.** Confirmation for staging is lighter; for prod it's a hard gate.
 
 ### Known landmines
 
@@ -182,4 +190,5 @@ These are not suggestions. Future Claude sessions deploying this app MUST follow
 - **Staging config vars diverge from prod.** Staging uses a placeholder `DISCORD_WEBHOOK` (no real Discord posts), and `NEXT_PUBLIC_GOOGLE_ANALYTICS` is unset. "Works in staging" doesn't fully predict prod for these features.
 - **AWS keys (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) are not set in prod or staging.** The contributor inquiry form's S3 upload is silently broken in production. `app.json` marks them `required: false` to match reality; don't add them to satisfy a feature without checking that S3 is actually expected to work.
 - **`API_V1_URL` self-references the app's own hostname.** Required env var, must be set after app creation to `https://<app-domain>/api/v1`. Bootstrapping a fresh app from `app.json` cannot auto-populate this. Be careful: at one point staging's `API_V1_URL` pointed at the prod URL - meaning the staging frontend was reading from the prod DB through prod's API. Always confirm `heroku config:get API_V1_URL -a setlife-solutions-staging` matches the staging domain after any change.
-- **No CI, no test suite.** All correctness verification is manual.
+- **`API_V1_URL` (and the other `next.config.js` `env` vars) are INLINED into the client bundle at BUILD time, not read at runtime.** Two consequences: (1) `pipelines:promote` is unsafe for prod — it copies staging's slug without rebuilding, so prod ends up calling staging's API/DB; deploy prod by building on it (`git push heroku-prod master`). (2) To preview prod data on a local production build you must set the var at **build** time, not just at `npm start`: `API_V1_URL="https://www.setlife.solutions/api/v1" npm run build` then start — otherwise the bundle keeps whatever was in `.env` (e.g. `localhost:3000`) and the browser CORS-fails.
+- **No CI, no test suite besides the Playwright visual diff.** All other correctness verification is manual. The visual suite **hides** (display:none) genuinely random regions like the shuffled `.ProjectSimilarWork` section rather than paint-masking them — masking keeps the element's box, so a variable-height random region still shifts the layout below it and trips a dimension mismatch. Don't revert that to masking.

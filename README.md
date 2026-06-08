@@ -75,6 +75,8 @@ npm run dev
 3. Generate the tables running the migrations `npx sequelize-cli db:migrate`
 4. Start the app `npm run dev`
 
+> **Note:** the DB connection forces SSL (`rejectUnauthorized: false`, for hosted Postgres). Local Postgres usually doesn't accept SSL, so expect connection failures unless your local DB has SSL enabled or you temporarily relax `dialectOptions.ssl` in `config/`.
+
 ---
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
@@ -93,7 +95,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+The GraphQL API is served from `pages/api/v1.ts` and is explorable in the browser at [http://localhost:3000/api/v1](http://localhost:3000/api/v1).
 
 The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
 
@@ -106,8 +108,6 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+This app deploys to **Heroku** (not Vercel), staging-first with a build-on-prod release. The full runbook — branch model, the staging→prod flow, env-var landmines (notably that `API_V1_URL` is inlined at build time, which is why prod is built directly rather than promoted), and the visual-regression gate — lives in [`CLAUDE.md`](./CLAUDE.md). Read it before deploying.
