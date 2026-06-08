@@ -11,23 +11,31 @@ interface ButtonProps {
 const variants = {
     'primary': {
         'background': 'bg-light-gray',
-        'border': 'border-2 border-light-gray',
-        'color': 'text-primary'
+        'border': 'border border-solid-black/5',
+        'color': 'text-primary-dark',
+        'shadow': 'shadow-soft',
+        'hover': 'hover:bg-[#E9EAEB] hover:shadow-card'
     },
     'secondary': {
         'background': 'bg-solid-white',
         'border': 'border-2 border-primary',
-        'color': 'text-primary'
+        'color': 'text-primary-dark',
+        'shadow': 'shadow-soft',
+        'hover': 'hover:bg-primary-tint hover:shadow-card'
     },
     'tertiary': {
-        'background': 'bg-primary',
+        'background': 'bg-teal-gradient',
         'border': '',
-        'color': 'text-solid-white'
+        'color': 'text-solid-white',
+        'shadow': 'shadow-glow',
+        'hover': 'hover:shadow-glow-lg hover:brightness-105'
     },
     'dark': {
         'background': 'bg-solid-black',
         'border': '',
-        'color': 'text-solid-white'
+        'color': 'text-solid-white',
+        'shadow': 'shadow-card',
+        'hover': 'hover:shadow-card-hover hover:bg-[#111]'
     }
 }
 
@@ -43,15 +51,21 @@ const Button = ({
 
     // inline-flex + center keeps the label centered and sizes the button to its
     // content in normal flow; callers can still force width with `w-full`.
+    // A subtle lift + shadow on hover gives the CTA real weight without motion noise.
+    const stateClasses = disabled
+        ? 'bg-light-gray text-solid-black/40 cursor-not-allowed'
+        : `${styleProps.background} ${styleProps.color} ${styleProps.shadow} ${styleProps.hover} hover:-translate-y-0.5 active:translate-y-0`
+
+    const borderClass = disabled ? '' : styleProps.border
+
     const classes = `
         Button
         inline-flex items-center justify-center text-center
         rounded-full py-4 px-8
-        font-medium
-        transition-opacity duration-200
-        ${disabled ? 'bg-light-gray cursor-not-allowed' : `${styleProps.background} hover:opacity-90`}
-        ${styleProps.border}
-        ${styleProps.color}
+        font-medium tracking-tight
+        transition-all duration-200 ease-out
+        ${stateClasses}
+        ${borderClass}
         ${className}
     `
 
