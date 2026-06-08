@@ -5,7 +5,8 @@ interface ButtonProps {
     className?: string,
     link?: string | null,
     variant?: string,
-    disabled?: boolean
+    disabled?: boolean,
+    type?: 'button' | 'submit'
 }
 
 const variants = {
@@ -44,7 +45,8 @@ const Button = ({
     link,
     variant,
     disabled,
-    className
+    className,
+    type
 }: ButtonProps) => {
 
     const styleProps = variants[(variant || 'primary') as keyof typeof variants];
@@ -78,7 +80,8 @@ const Button = ({
     }
 
     return (
-        <button className={classes} type='button' disabled={disabled}>
+        // eslint-disable-next-line react/button-has-type
+        <button className={classes} type={type || 'button'} disabled={disabled}>
             {children}
         </button>
     )
@@ -88,7 +91,8 @@ Button.defaultProps = {
     variant: 'primary',
     link: null,
     disabled: false,
-    className: ''
+    className: '',
+    type: 'button'
 }
 
 export default Button
