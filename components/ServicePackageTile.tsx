@@ -35,11 +35,11 @@ const ServicePackageTile = ({
 
     return (
         <div
-            className='ServicePackageTile flex flex-col h-full bg-solid-white p-8 rounded-2xl shadow-sm gap-6'
+            className='ServicePackageTile flex flex-col h-full bg-solid-white p-8 rounded-2xl border border-solid-black/5 shadow-card transition-all duration-300 ease-out hover:shadow-card-hover hover:-translate-y-1 gap-6'
             key={id}
         >
             <div
-                className='container rounded-full bg-primary h-24 w-24 mx-auto'
+                className='container rounded-2xl bg-teal-gradient h-20 w-20 mx-auto shadow-glow'
             >
                 {idx && (
                     <div className='package-number m-auto'>
@@ -65,7 +65,7 @@ const ServicePackageTile = ({
                     </Paragraph>
                 </div>
             )}
-            <div className='mt-auto flex flex-col gap-3 pt-2'>
+            <div className='mt-auto flex flex-col gap-3 pt-5 border-t border-solid-black/5'>
                 <Paragraph alignment='text-center' color='primary'>
                     { meeting_frequency }
                 </Paragraph>

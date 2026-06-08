@@ -23,20 +23,20 @@ const ServiceTile = ({
 
     return (
         <div
-            className='ServiceTile flex flex-col gap-4 rounded-2xl p-6 bg-solid-white h-full w-full shadow-sm transition-shadow duration-200 hover:shadow-lg cursor-pointer'
+            className='ServiceTile group flex flex-col gap-5 rounded-2xl border border-solid-black/5 p-8 bg-solid-white h-full w-full shadow-card transition-all duration-300 ease-out hover:shadow-card-hover hover:-translate-y-1 cursor-pointer'
             onClick={() => {
                 router.push(url)
             }}
         >
-            <div className='mt-2'>
+            <div className='mt-1'>
                 {imageUrl
                     ? (
                         <div
-                            className='rounded-full bg-cover bg-center h-24 w-24 m-auto'
+                            className='rounded-2xl bg-cover bg-center h-20 w-20 mx-auto ring-1 ring-solid-black/5 shadow-soft transition-transform duration-300 group-hover:scale-105'
                             style={{ backgroundImage: `url(${imageUrl})` }}
                         />
                     ) : (
-                        <div className='rounded-full bg-primary h-24 w-24 m-auto' />
+                        <div className='rounded-2xl bg-teal-gradient h-20 w-20 mx-auto shadow-glow transition-transform duration-300 group-hover:scale-105' />
                     )
                 }
             </div>
@@ -50,11 +50,12 @@ const ServiceTile = ({
                     { description }
                 </Paragraph>
             </div>
-            <div className='text-right mt-auto'>
-                <a href={url}>
-                    <Paragraph variant='sm' alignment='text-right' color='primary'>
-                        { LEARN_MORE }
-                    </Paragraph>
+            <div className='mt-auto flex justify-center'>
+                <a href={url} className='inline-flex items-center gap-1.5 text-sm font-medium text-primary-dark transition-colors'>
+                    { LEARN_MORE }
+                    <svg xmlns='http://www.w3.org/2000/svg' className='h-4 w-4 transition-transform duration-200 group-hover:translate-x-1' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={2.2}>
+                        <path strokeLinecap='round' strokeLinejoin='round' d='M14 5l7 7m0 0l-7 7m7-7H3' />
+                    </svg>
                 </a>
             </div>
         </div>

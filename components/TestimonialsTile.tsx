@@ -1,5 +1,4 @@
 import React from 'react'
-import { useRouter } from 'next/router'
 
 import Paragraph from './Paragraph'
 import Subtitle from './Subtitle'
@@ -12,7 +11,7 @@ interface TestimonialsTileProps {
         name: string,
         logo_image_url: string,
     }
-    
+
 }
 
 const TestimonialTile = ({
@@ -22,38 +21,43 @@ const TestimonialTile = ({
     project
 
 }: TestimonialsTileProps) => {
-    const router = useRouter()
 
     return (
         <div
-            className='TestimonialsTile flex flex-col justify-center items-center gap-5 rounded-2xl border border-primary p-8 bg-solid-white max-w-md w-max h-full'
+            className='TestimonialsTile relative flex flex-col gap-6 rounded-2xl border border-solid-black/5 shadow-card p-8 pt-10 bg-solid-white w-[19rem] md:w-[24rem] h-full transition-all duration-300 ease-out hover:shadow-card-hover hover:-translate-y-1'
         >
-            {person_image_url && (
-                <div
-                    className='rounded-full bg-contain bg-no-repeat bg-center h-20 w-20'
-                    style={{ backgroundImage: `url(${person_image_url})` }}
-                />
-            )}
-            <div className='flex items-center gap-3'>
-                {project.logo_image_url && (
-                    <div
-                        className='rounded-full bg-contain h-9 w-9 bg-no-repeat bg-center bg-black'
-                        style={{ backgroundImage: `url(${project.logo_image_url})` }}
-                    />
-                )}
-                <Subtitle variant='s' alignment='text-center' color='solid-black'>
-                    { project.name }
-                </Subtitle>
-            </div>
+            <span
+                aria-hidden='true'
+                className='absolute top-3 left-7 select-none text-6xl leading-none font-serif text-primary/25'
+            >
+                &ldquo;
+            </span>
             <div className='grow'>
-                <Paragraph alignment='text-center'>
+                <Paragraph alignment='text-left'>
                     { testimony }
                 </Paragraph>
             </div>
-            <div className='mt-auto'>
-                <Subtitle variant='xs' alignment='text-center'>
-                    { person_name }
-                </Subtitle>
+            <div className='flex items-center gap-3 pt-5 border-t border-solid-black/5'>
+                {person_image_url && (
+                    <div
+                        className='shrink-0 rounded-full bg-cover bg-no-repeat bg-center h-12 w-12 ring-1 ring-solid-black/5'
+                        style={{ backgroundImage: `url(${person_image_url})` }}
+                    />
+                )}
+                <div className='min-w-0'>
+                    <Subtitle variant='xs' alignment='text-left' color='solid-black'>
+                        { person_name }
+                    </Subtitle>
+                    <Paragraph variant='sm' alignment='text-left' color='primary-dark'>
+                        { project.name }
+                    </Paragraph>
+                </div>
+                {project.logo_image_url && (
+                    <div
+                        className='ml-auto shrink-0 rounded-full bg-contain bg-no-repeat bg-center h-10 w-10 bg-black'
+                        style={{ backgroundImage: `url(${project.logo_image_url})` }}
+                    />
+                )}
             </div>
         </div>
     )

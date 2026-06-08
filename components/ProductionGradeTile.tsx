@@ -14,17 +14,17 @@ const ProductionGradeTile = ({
 }: ProductionGradeTileProps) => {
 
     return (
-        <div className='grid grid-cols-1 gap-5 rounded-2xl shadow-sm p-8 bg-solid-white md:p-16'>
+        <div className='grid grid-cols-1 gap-5 rounded-2xl border border-solid-black/5 shadow-card p-8 bg-solid-white md:p-16'>
             <div className=''>
-                <div className='rounded-full bg-solid-black h-24 w-24 m-auto'>
+                <div className='rounded-2xl bg-solid-black h-24 w-24 m-auto shadow-card'>
                     <div>
-                        <img 
+                        <img
                             className='p-8'
                             src={THUMBS_ICON}
                             alt='thumbs'
                         />
                     </div>
-                </div>    
+                </div>
             </div>
             <div className=''>
                 <Subtitle variant='xs' alignment='text-center'>
