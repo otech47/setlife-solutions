@@ -51,7 +51,7 @@ const ServicePackagesPage: NextPage = () => {
 
     return (
         <div className='ServicePackages'>
-            <Section>
+            <Section paddingTop='pt-8 md:pt-12'>
                 <div className='grid grid-flow-row auto-rows-max gap-12'>
                     <Subtitle>
                         { SERVICE_PACKAGES }

@@ -61,13 +61,13 @@ const ProjectsPage: NextPage = () => {
                 title={PORTFOLIO}
                 titleAlignment='text-center'
             />
-            <Section>
+            <Section paddingTop='pt-8 md:pt-12'>
                 <div className='grid grid-flow-row'>
                     <Headline variant='h1' color='solid-black' alignment='text-center md:text-left'>
                         { OUR_WORK }
                     </Headline>
-                    <div 
-                        className='grid grid-flow-row auto-rows-max grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 lg:gap-x-16 lg:gap-y-12 xl:gap-x-24 gap-y-6 xl:gap-y-16 mt-12'
+                    <div
+                        className='grid grid-flow-row auto-rows-max grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10 mt-8'
                     >
                         { renderProjects() }
                     </div>

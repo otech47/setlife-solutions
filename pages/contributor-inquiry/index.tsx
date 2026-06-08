@@ -4,7 +4,7 @@ import Section from '../../components/Section'
 
 const ContributorInquiryPage: NextPage = () => {
     return (
-        <Section>
+        <Section paddingTop='pt-8 md:pt-12'>
             <ContributorInquiryForm />
         </Section>
     )

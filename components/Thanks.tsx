@@ -13,7 +13,7 @@ import {
 const Thanks = () => {
     return (
         <div className='Thanks'>
-            <Section>
+            <Section paddingTop='pt-8 md:pt-12'>
                 <div className='grid grid-flow-row auto-rows-max'>
                     <div className='m-auto h-96'>
                         <img

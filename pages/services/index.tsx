@@ -6,7 +6,7 @@ import ServicesTiles from '../../components/Services'
 const Services: NextPage = () => {
     return (
         <div className='Services'>
-            <Section color='light-gray'>
+            <Section color='light-gray' paddingTop='pt-8 md:pt-12'>
                 <ServicesTiles />
             </Section>
         </div>
