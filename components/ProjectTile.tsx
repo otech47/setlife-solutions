@@ -24,7 +24,7 @@ const ProjectTile = ({
     externalLink,
 }: ProjectProps) => {
     return (
-        <div className='ProjectTile group grid grid-rows overflow-x-hidden'>
+        <div className='ProjectTile group flex flex-col overflow-x-hidden'>
             <div className='mb-2'>
                 <Subtitle
                     color='primary-dark'
