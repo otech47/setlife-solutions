@@ -32,7 +32,7 @@ async function autoScroll(page: Page): Promise<void> {
  * reused for both environments by the caller, so the only intended variable
  * between the two screenshots is the deployed front-end itself.
  */
-export async function capture(page: Page, url: string, masks: string[] = []): Promise<Buffer> {
+export async function capture(page: Page, url: string, hide: string[] = []): Promise<Buffer> {
     await page.goto(url, { waitUntil: 'networkidle' })
 
     await page.addStyleTag({
@@ -47,6 +47,17 @@ export async function capture(page: Page, url: string, masks: string[] = []): Pr
             html { scroll-behavior: auto !important; }
         `,
     })
+
+    // Remove genuinely non-deterministic regions from layout entirely (not just
+    // paint over them): a masked box still occupies space, so a region whose
+    // *height* varies between loads (e.g. a shuffled set of cards with
+    // different-length text) would still shift everything below it and trip a
+    // dimension mismatch. display:none equalizes both layout and content.
+    if (hide.length) {
+        await page.addStyleTag({
+            content: hide.map((selector) => `${selector} { display: none !important; }`).join('\n'),
+        })
+    }
 
     // Fonts must be ready or text reflows/anti-aliases differently mid-shot.
     await page.evaluate(() => document.fonts.ready)
@@ -74,8 +85,5 @@ export async function capture(page: Page, url: string, masks: string[] = []): Pr
     return page.screenshot({
         fullPage: true,
         animations: 'disabled',
-        // A fixed color over known-dynamic regions; identical on both envs.
-        mask: masks.map((selector) => page.locator(selector)),
-        maskColor: '#FF00FF',
     })
 }

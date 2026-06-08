@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { capture } from './lib/stabilize'
 import { compareScreenshots } from './lib/diff'
 import { getRoutes } from './lib/routes'
-import { masksForPath } from './lib/masks'
+import { hiddenSelectorsForPath } from './lib/masks'
 import { PROD_BASE, STAGING_BASE, MAX_DIFF_RATIO } from './lib/env'
 
 /**
@@ -25,11 +25,11 @@ test.describe(`visual parity: staging vs prod`, () => {
         test(`${route.name} [${route.path}]`, async ({ page }, testInfo) => {
             const prodUrl = `${PROD_BASE}${route.path}`
             const stagingUrl = `${STAGING_BASE}${route.path}`
-            const masks = masksForPath(route.path)
+            const hide = hiddenSelectorsForPath(route.path)
 
             // Capture prod first (the model), then staging, on the same page.
-            const prodShot = await capture(page, prodUrl, masks)
-            const stagingShot = await capture(page, stagingUrl, masks)
+            const prodShot = await capture(page, prodUrl, hide)
+            const stagingShot = await capture(page, stagingUrl, hide)
 
             const result = compareScreenshots(prodShot, stagingShot)
 

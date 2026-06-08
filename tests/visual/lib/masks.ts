@@ -1,23 +1,26 @@
 /**
- * Per-route masks for genuinely non-deterministic regions.
+ * Per-route selectors for genuinely non-deterministic regions to HIDE during
+ * capture (display:none), on both prod and staging identically.
  *
- * A masked element is painted with a fixed solid color in the screenshot, so
- * its actual content cannot register as a diff. Both prod and staging get the
- * exact same mask, so the region is identical on both sides while everything
- * around it is still compared pixel-for-pixel.
+ * We hide rather than paint-mask because these regions vary in *height*, not
+ * just content - a paint mask keeps the element's box, so a taller random
+ * variant would still push the footer down and trip a dimension mismatch.
+ * Removing it from layout makes the rest of the page line up exactly.
  *
- * Only mask things that are intentionally random/dynamic - masking hides
- * regressions inside the masked box, so keep the list tight and justified.
+ * Keep this list tight: a hidden region is no longer compared at all, so only
+ * hide things that are intentionally random AND whose styling is covered
+ * elsewhere.
  */
-export function masksForPath(path: string): string[] {
-    const masks: string[] = []
+export function hiddenSelectorsForPath(path: string): string[] {
+    const hide: string[] = []
 
     // /projects/:id renders a "You may also like" section whose tiles are
-    // `shuffle()`d on every load (pages/projects/[projectId].tsx). The random
-    // set/order is not a regression signal, so mask the whole section.
+    // `shuffle()`d on every load (pages/projects/[projectId].tsx) and now show
+    // full-length descriptions, so the section's height varies per load. The
+    // tiles use ProjectTile, which is already compared in full on /projects.
     if (/^\/projects\/\d+\/?$/.test(path)) {
-        masks.push('.ProjectSimilarWork')
+        hide.push('.ProjectSimilarWork')
     }
 
-    return masks
+    return hide
 }
