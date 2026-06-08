@@ -22,8 +22,8 @@ const Section = ({
 
 Section.defaultProps = {
     color: 'solid-white',
-    paddingBottom: 'pb-12',
-    paddingTop: 'pt-12',
+    paddingBottom: 'pb-16 md:pb-24',
+    paddingTop: 'pt-16 md:pt-24',
 }
 
 export default Section

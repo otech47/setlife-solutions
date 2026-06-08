@@ -33,7 +33,7 @@ const Paragraph = ({
     const styleProps: any = Object.values(variants.filter(v => Object.keys(v)[0] == variant)[0])[0]
 
     return (
-        <div className={`Paragraph ${styleProps.weight} ${styleProps.size} text-${color} ${alignment}`}>
+        <div className={`Paragraph ${styleProps.weight} ${styleProps.size} text-${color} ${alignment} leading-relaxed`}>
             { children }
         </div>
     )

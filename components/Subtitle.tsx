@@ -39,7 +39,7 @@ const Subtitle = ({
     const styleProps: any = Object.values(variants.filter(v => Object.keys(v)[0] == variant)[0])[0]
 
     return (
-        <div className={`Subtitle ${styleProps.weight} ${styleProps.size} text-${color} ${alignment}`}>
+        <div className={`Subtitle ${styleProps.weight} ${styleProps.size} text-${color} ${alignment} tracking-tight leading-snug`}>
             { children }
         </div>
     )
