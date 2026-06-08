@@ -3,6 +3,7 @@ import { useRouter } from 'next/router'
 
 import Paragraph from './Paragraph'
 import Subtitle from './Subtitle'
+import ServiceIcon from './ServiceIcon'
 
 import { LEARN_MORE } from '../constants/strings' 
 
@@ -36,7 +37,9 @@ const ServiceTile = ({
                             style={{ backgroundImage: `url(${imageUrl})` }}
                         />
                     ) : (
-                        <div className='rounded-2xl bg-teal-gradient h-20 w-20 mx-auto shadow-glow transition-transform duration-300 group-hover:scale-105' />
+                        <div className='grid place-items-center rounded-2xl bg-teal-gradient h-20 w-20 mx-auto shadow-glow transition-transform duration-300 group-hover:scale-105'>
+                            <ServiceIcon name={name} className='h-9 w-9 text-solid-white' />
+                        </div>
                     )
                 }
             </div>
