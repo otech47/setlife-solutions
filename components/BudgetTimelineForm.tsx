@@ -3,6 +3,7 @@ import Slider from 'rc-slider'
 import 'rc-slider/assets/index.css'
 
 import Paragraph from './Paragraph'
+import OptionChip from './OptionChip'
 
 import {
     MIN,
@@ -107,26 +108,14 @@ const BudgetTimelineForm = ({
                 name: STARTED_DEVELOPMENT_BUT_NEED_ASSISTANCE
             }
         ]
-        return timelineTypes.map(timeline => {
-            return (
-                <div className='w-fit' onClick={() => addTimelineValue(timeline.name)}>
-                    <label 
-                        className='form-check-label inline-block text-solid-black' 
-                        htmlFor='timelineRadio'
-                        key={timeline.name}
-                    >
-                        <input 
-                            className='form-check-input appearance-none rounded-full h-4 w-4 border border-gray-300 bg-white checked:bg-primary checked:border-primary focus:outline-none transition duration-200 mt-1 align-top bg-no-repeat bg-center bg-contain float-left mr-2 cursor-pointer' 
-                            type='checkbox'
-                            id={timeline.name}
-                            checked={timelineValues.includes(timeline.name)}
-                            onChange={() => {}}
-                        />
-                        { timeline.name }
-                    </label>
-                </div>
-            )
-        })
+        return timelineTypes.map(timeline => (
+            <OptionChip
+                key={timeline.name}
+                label={timeline.name}
+                selected={timelineValues.includes(timeline.name)}
+                onSelect={() => addTimelineValue(timeline.name)}
+            />
+        ))
     }
     
     return (
@@ -193,7 +182,9 @@ const BudgetTimelineForm = ({
                         {DESCRIBE_ANY_TIMELINE_AND_BUDGET_CONSTRAINTS_FOR_YOUR_PROJECT}
                     </Paragraph>
                 </div>
-                { renderTimelineTypes() }
+                <div className='flex flex-wrap gap-3'>
+                    { renderTimelineTypes() }
+                </div>
             </div>
         </div>
     )

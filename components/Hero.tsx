@@ -10,7 +10,7 @@ import {
     RATHER_THAN_DELIVERING_A_BLACKBOX,
     SCHEDULE_CONSULTATION,
     CONSULTATION,
-    SOFTWARE_CONSULTING_AND_DEVELOPMENT
+    SOFTWARE_SOLUTIONS_ENGINEERING
 } from '../constants/strings'
 
 import {
@@ -29,7 +29,7 @@ const Hero = ({}) => {
                 <div className='flex justify-center md:justify-start'>
                     <span className='inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-tint px-4 py-1.5 text-sm font-medium tracking-tight text-primary-dark'>
                         <span className='h-2 w-2 rounded-full bg-primary' />
-                        { SOFTWARE_CONSULTING_AND_DEVELOPMENT }
+                        { SOFTWARE_SOLUTIONS_ENGINEERING }
                     </span>
                 </div>
                 <div className=''>

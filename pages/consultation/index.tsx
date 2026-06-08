@@ -26,7 +26,9 @@ import {
     CONTACT_INFORMATION,
     BUDGET_AND_TIMELINE,
     PROJECT_GOALS,
-    FIELDS_WITH_ARE_REQUIRED
+    FIELDS_WITH_ARE_REQUIRED,
+    COMPLETE_REQUIRED_SECTIONS_TO_SUBMIT,
+    REQUIRED_STEPS_COMPLETE
 } from '../../constants/strings'
 
 interface ServiceTypesFormProps {
@@ -53,6 +55,16 @@ const ConsultationPage: NextPage = () => {
     const [constraints, setConstraints] = useState<string>('')
 
     const router = useRouter()
+
+    // Drive the progress bar + per-section badges off the existing error flags.
+    const contactComplete = !contactInformationError
+    const goalsComplete = !serviceInformationError
+    const requiredTotal = 2
+    const requiredDone = [contactComplete, goalsComplete].filter(Boolean).length
+    const remainingSections = [
+        !contactComplete && CONTACT_INFORMATION,
+        !goalsComplete && PROJECT_GOALS
+    ].filter(Boolean) as string[]
 
     const [createConsultation] = useMutation(
         CREATE_CONSULTATION, {
@@ -86,9 +98,9 @@ const ConsultationPage: NextPage = () => {
     }, [timeline])
 
     const handleSubmit = async (e: any) => {
+        e.preventDefault()
         if (disabledButton) return
         try {
-            e.preventDefault()
             const res = await fetch('/api/sendgrid', {
                 body: JSON.stringify({
                     services,
@@ -114,45 +126,73 @@ const ConsultationPage: NextPage = () => {
 
     return (
         <div className='ConsultationPage'>
-            <Section>
+            <Section paddingBottom='pb-10 md:pb-12'>
                 <Headline variant='h1'>
                     {PLEASE_FILL_OUT_THE_FORM}
                 </Headline>
-            </Section>
-            <FormSection title={CONTACT_INFORMATION}>
-                <ContactInformation 
-                    setContactInformation={setContactInformation}
-                    setContactInformationError={setContactInformationError}
-                />
-            </FormSection>
-            <FormSection title={BUDGET_AND_TIMELINE}>
-                <BudgetTimelineForm
-                    setBudget={setBudget}
-                    setTimeline={setTimeline}
-                    defaultBudget={[DEFAULT_MIN_BUDGET, DEFAULT_MAX_BUDGET]}
-                />
-            </FormSection>
-            <FormSection title={PROJECT_GOALS}>
-                <ProjectGoalsForm 
-                    setServiceInformation={setServiceInformation}
-                    setServices={setServices}
-                    setServiceInformationError={setServiceInformationError}
-                />
-            </FormSection>
-            <Section>
-                <div className={`grid grid-cols-1 md:grid-cols-3 ${disabledButton ? 'block' : 'hidden'}`}>
-                    <div className='hidden md:block' />
-                    <Subtitle variant='xs-light' alignment='text-center md:text-right'>
-                        {FIELDS_WITH_ARE_REQUIRED}
-                    </Subtitle>
-                </div>
-                <div className='grid grid-cols-1 mt-5 md:grid-cols-3' onClick={(e: any) => handleSubmit(e)}>
-                    <div className='hidden md:block' />
-                    <Button variant='tertiary' disabled={disabledButton}>
-                        {SUBMIT}
-                    </Button>
+                <div className='mt-6 max-w-md'>
+                    <div className='flex items-center justify-between mb-2'>
+                        <Subtitle variant='xs-light' alignment='text-left'>
+                            {REQUIRED_STEPS_COMPLETE}
+                        </Subtitle>
+                        <span className='text-sm font-semibold text-primary-dark'>
+                            {requiredDone}/{requiredTotal}
+                        </span>
+                    </div>
+                    <div className='h-2 w-full overflow-hidden rounded-full bg-solid-black/5'>
+                        <div
+                            className='h-full rounded-full bg-teal-gradient transition-all duration-500 ease-out'
+                            style={{ width: `${(requiredDone / requiredTotal) * 100}%` }}
+                        />
+                    </div>
                 </div>
             </Section>
+            <form onSubmit={handleSubmit}>
+                <FormSection title={CONTACT_INFORMATION} step={1} complete={contactComplete} defaultOpen>
+                    <ContactInformation
+                        setContactInformation={setContactInformation}
+                        setContactInformationError={setContactInformationError}
+                    />
+                </FormSection>
+                <FormSection title={BUDGET_AND_TIMELINE} step={2} optional>
+                    <BudgetTimelineForm
+                        setBudget={setBudget}
+                        setTimeline={setTimeline}
+                        defaultBudget={[DEFAULT_MIN_BUDGET, DEFAULT_MAX_BUDGET]}
+                    />
+                </FormSection>
+                <FormSection title={PROJECT_GOALS} step={3} complete={goalsComplete}>
+                    <ProjectGoalsForm
+                        setServiceInformation={setServiceInformation}
+                        setServices={setServices}
+                        setServiceInformationError={setServiceInformationError}
+                    />
+                </FormSection>
+                <Section>
+                    <div className='flex flex-col items-center gap-5'>
+                        {disabledButton && (
+                            <div className='flex flex-col items-center gap-3'>
+                                <Subtitle variant='xs-light' alignment='text-center'>
+                                    {COMPLETE_REQUIRED_SECTIONS_TO_SUBMIT}
+                                </Subtitle>
+                                <div className='flex flex-wrap justify-center gap-2'>
+                                    {remainingSections.map(name => (
+                                        <span key={name} className='rounded-full border border-gray-200 px-3 py-1 text-sm text-gray-500'>
+                                            {name}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <Button variant='tertiary' type='submit' disabled={disabledButton} className='w-full md:w-auto md:px-20'>
+                            {SUBMIT}
+                        </Button>
+                        <Subtitle variant='xs-light' alignment='text-center'>
+                            {FIELDS_WITH_ARE_REQUIRED}
+                        </Subtitle>
+                    </div>
+                </Section>
+            </form>
         </div>
     )
 }

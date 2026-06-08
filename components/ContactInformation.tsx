@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import Headline from './Headline'
+import OptionChip from './OptionChip'
 
 import { validEmail, validNumber } from '../utilities/validations'
 
@@ -36,6 +37,9 @@ const ContactInformation = ({
     const [nameError, setNameError] = useState(false)
     const [emailError, setEmailError] = useState(false)
     const [clientTypeError, setClientTypeError] = useState(false)
+    // Only surface field errors once a field has been blurred, so we never
+    // flash red while the user is still mid-typing a valid value.
+    const [touched, setTouched] = useState<{ [key: string]: boolean }>({})
 
     useEffect(() => {
         setContactInformation({
@@ -92,12 +96,12 @@ const ContactInformation = ({
             }
         ]
         return basicInformationFields.map(input => {
+            const showError = Boolean(input.error) && touched[input.name]
             return (
-                <div>
-                    <label 
-                        className={`relative block p-3 border-2 rounded-full ${input.error ? 'border-red-600' : 'border-primary'}`}
-                        htmlFor={input.name} 
-                        key={input.name}
+                <div key={input.name}>
+                    <label
+                        className={`relative block p-3 border rounded-full transition-all duration-150 ${showError ? 'border-red-500' : 'border-gray-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20'}`}
+                        htmlFor={input.name}
                     >
                         <input
                             className='w-full px-4 pt-3.5 pb-0 text-sm placeholder-transparent border-none focus:ring-0 peer'
@@ -107,19 +111,19 @@ const ContactInformation = ({
                             required
                             value={input.value}
                             onChange={(e) => input.onChange(e.target.value)}
+                            onBlur={() => setTouched(prev => ({ ...prev, [input.name]: true }))}
                         />
                         <span className='absolute text-xs px-4 font-medium text-gray-500 transition-all left-3 peer-focus:text-xs peer-focus:top-3 peer-focus:translate-y-0 peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-sm'>
                             { input.name }
                             <span className={`${input.name == PHONE_NUMBER ? 'hidden' : 'inline'}`}>*</span>
                         </span>
                     </label>
-                    {input.error && (
-                        <span className='px-5 text-red-600'>
+                    {showError && (
+                        <span className='px-5 text-sm text-red-500'>
                             { INVALID } { input.name }
-                        </span> 
+                        </span>
                     )}
                 </div>
-                
             )
         })
     }
@@ -149,30 +153,14 @@ const ContactInformation = ({
                 name: OTHER,
             },
         ]
-        return clientTypes.map(client => {
-            return (
-                <div 
-                    className='w-fit'
-                    onClick={() => handleClientTypeChange(client.name)}
-                >
-                    <label 
-                        className='form-check-label inline-block text-solid-black' 
-                        htmlFor='clientType'
-                        key={client.name}
-                    >
-                        <input 
-                            className='form-check-input appearance-none rounded-full h-4 w-4 border border-gray-300 bg-white checked:bg-primary checked:border-primary focus:outline-none transition duration-200 mt-1 align-top bg-no-repeat bg-center bg-contain float-left mr-2 cursor-pointer' 
-                            type='radio' 
-                            name='clientType' 
-                            id={client.name} 
-                            checked={clientType == client.name}
-                            onChange={() => {}}
-                        />
-                        { client.name }
-                    </label>
-                </div>
-            )
-        })
+        return clientTypes.map(client => (
+            <OptionChip
+                key={client.name}
+                label={client.name}
+                selected={clientType == client.name}
+                onSelect={() => handleClientTypeChange(client.name)}
+            />
+        ))
     }
 
     return (
@@ -180,14 +168,16 @@ const ContactInformation = ({
             <div className='grid grid-flow-row auto-rows-max gap-8 w-full md:w-6/12'>
                 { renderInputs() }
             </div>
-            <div className='grid grid-flow-row auto-rows-max gap-8 w-full md:w-6/12 mt-8'>
-                <Headline 
+            <div className='grid grid-flow-row auto-rows-max gap-6 w-full md:w-8/12 mt-10'>
+                <Headline
                     color='primary'
                     variant='alternative'
                 >
                     {THIS_PROJECT_IS_FOR + '*'}
                 </Headline>
-                { renderClientTypes() }
+                <div className='flex flex-wrap gap-3'>
+                    { renderClientTypes() }
+                </div>
                 {clientTypeError && (
                     <span className='px-5 text-red-600'>
                         { PLEASE_SELECT_AT_LEAST_ONE_OPTION }

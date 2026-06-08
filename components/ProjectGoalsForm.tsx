@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import Paragraph from './Paragraph'
+import OptionChip from './OptionChip'
 
 import {
     SOFTWARE_CONSULTING,
@@ -87,27 +88,14 @@ const ProjectGoalsForm = ({
                 name: UNDECIDED
             },
         ]
-        return services.map(service => {
-            return (
-                <div className='w-fit' onClick={() => addServiceType(service.name)}>
-                    <label 
-                        className='form-check-label inline-block text-solid-black' 
-                        htmlFor='flexRadioDefault1'
-                        key={service.name}
-                    >
-                        <input 
-                            className='form-check-input appearance-none rounded-full h-4 w-4 border border-gray-300 bg-white checked:bg-primary checked:border-primary focus:outline-none transition duration-200 mt-1 align-top bg-no-repeat bg-center bg-contain float-left mr-2 cursor-pointer' 
-                            type='checkbox' 
-                            name='serviceRadio' 
-                            id={service.name} 
-                            checked={serviceTypes.includes(service.name)}
-                            onChange={() => {}}
-                        />
-                        { service.name }
-                    </label>
-                </div>
-            )
-        })
+        return services.map(service => (
+            <OptionChip
+                key={service.name}
+                label={service.name}
+                selected={serviceTypes.includes(service.name)}
+                onSelect={() => addServiceType(service.name)}
+            />
+        ))
     }
 
     return (
@@ -116,7 +104,9 @@ const ProjectGoalsForm = ({
                 <Paragraph variant='m-bold'>
                     {WHICH_SERVICE_BEST_FITS + '*'}
                 </Paragraph>
-                { renderServiceTypes() }
+                <div className='flex flex-wrap gap-3'>
+                    { renderServiceTypes() }
+                </div>
                 <Paragraph variant='m-bold'>
                     {GIVE_US_BRIEF_DESCRIPTION + '*'}
                 </Paragraph>
@@ -125,21 +115,24 @@ const ProjectGoalsForm = ({
                         form-control
                         block
                         w-full
-                        px-3
-                        py-1.5
-                        bg-white 
+                        px-4
+                        py-3
+                        text-sm
+                        bg-white
                         bg-clip-padding
-                        border border-2 
-                        ${projectGoalError ? 'border-red-600' : 'border-primary'}
-                        rounded-lg
+                        border
+                        ${projectGoalError ? 'border-red-500' : 'border-gray-200 focus:border-primary'}
+                        rounded-xl
                         m-0
+                        transition-colors
                     `}
                     id='formControlTextarea'
-                    rows={10}
+                    rows={8}
+                    placeholder={GIVE_US_BRIEF_DESCRIPTION}
                     onChange={(e) => onChangeProjectGoal(e.target.value)}
                 />
                 {projectGoalError && (
-                    <span className='px-5 text-red-600'>
+                    <span className='px-5 text-sm text-red-500'>
                         { PLEASE_GIVE_A_DESCRIPTION }
                     </span>
                 )}
