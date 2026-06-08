@@ -13,7 +13,7 @@ const DedicatedDevTile = ({
 }: DedicatedDevTileProps) => {
 
     return (
-        <div className='grid grid-cols-1 gap-5 rounded-2xl p-8 bg-solid-white md:p-16'>
+        <div className='grid grid-cols-1 gap-5 rounded-2xl shadow-sm p-8 bg-solid-white md:p-16'>
             <div className=''>
                 <div className='rounded-full bg-primary h-24 w-24 m-auto'>
                     <img 

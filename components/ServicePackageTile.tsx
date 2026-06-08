@@ -35,7 +35,7 @@ const ServicePackageTile = ({
 
     return (
         <div
-            className='ServicePackageTile flex flex-col h-full bg-solid-white p-8 rounded-lg gap-6'
+            className='ServicePackageTile flex flex-col h-full bg-solid-white p-8 rounded-2xl shadow-sm gap-6'
             key={id}
         >
             <div
