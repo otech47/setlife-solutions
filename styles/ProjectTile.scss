@@ -3,11 +3,10 @@
         background-repeat: no-repeat;
         background-size: cover;
     }
+    // Show the full project description — no clamp. These blurbs are written
+    // intentionally and should appear in full.
     .description {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+        overflow-wrap: break-word;
     }
 }
 
