@@ -41,42 +41,31 @@ const Button = ({
 
     const styleProps = variants[(variant || 'primary') as keyof typeof variants];
 
-    const buttonContent = children;
+    // inline-flex + center keeps the label centered and sizes the button to its
+    // content in normal flow; callers can still force width with `w-full`.
+    const classes = `
+        Button
+        inline-flex items-center justify-center text-center
+        rounded-full py-4 px-8
+        font-medium
+        transition-opacity duration-200
+        ${disabled ? 'bg-light-gray cursor-not-allowed' : `${styleProps.background} hover:opacity-90`}
+        ${styleProps.border}
+        ${styleProps.color}
+        ${className}
+    `
 
     if (link) {
         return (
-            <a 
-                href={link}
-                className={`
-                    Button
-                    rounded-full
-                    py-4
-                    ${disabled ? 'bg-light-gray' : styleProps.background}
-                    ${styleProps.border}
-                    ${styleProps.color}
-                    ${className}
-                `}
-            >
-                {buttonContent}
+            <a href={link} className={classes}>
+                {children}
             </a>
         )
     }
 
     return (
-        <button 
-            className={`
-                Button
-                rounded-full
-                py-4
-                ${disabled ? 'bg-light-gray' : styleProps.background}
-                ${styleProps.border}
-                ${styleProps.color}
-                ${className}
-            `}
-            type='button'
-            disabled={disabled}
-        >
-            {buttonContent}
+        <button className={classes} type='button' disabled={disabled}>
+            {children}
         </button>
     )
 }
