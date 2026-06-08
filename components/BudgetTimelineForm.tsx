@@ -27,12 +27,14 @@ import {
 interface BudgetTimelineFormProps {
     setBudget: any,
     setTimeline: any,
+    setBudgetTimelineError: any,
     defaultBudget: number[],
 }
 
 const BudgetTimelineForm = ({
     setBudget,
     setTimeline,
+    setBudgetTimelineError,
     defaultBudget,
 }: BudgetTimelineFormProps) => {
 
@@ -40,9 +42,12 @@ const BudgetTimelineForm = ({
     const [maxBudgetValue, setMaxBudgetValue] = useState(defaultBudget[1])
     const [timelineValues, setTimelineValues] = useState<string[]>([])
     const [windowSize, setWindowSize] = useState<string>('')
-    
+
+    // This section is required: a budget range always has a value (slider /
+    // presets default it), so the gate is "tell us at least one constraint".
     useEffect(() => {
         setTimeline(timelineValues)
+        setBudgetTimelineError(timelineValues.length === 0)
     }, [timelineValues])
 
     useEffect(() => {
@@ -53,13 +58,31 @@ const BudgetTimelineForm = ({
         } 
     }, [windowSize])
 
-    const onSliderChange = (value: any) => {
-        setMinBudgetValue(value[0])
-        setMaxBudgetValue(value[1])
+    const applyBudget = (min: number, max: number) => {
+        setMinBudgetValue(min)
+        setMaxBudgetValue(max)
         setBudget({
-            minBudget: value[0],
-            maxBudget: value[1]
+            minBudget: min,
+            maxBudget: max
         })
+    }
+
+    const onSliderChange = (value: any) => {
+        applyBudget(value[0], value[1])
+    }
+
+    // One-click ranges that snap the slider; the slider stays for fine-tuning.
+    const budgetPresets = [
+        [1000, 10000],
+        [10000, 25000],
+        [25000, 50000],
+        [50000, 100000]
+    ]
+
+    const presetLabel = (min: number, max: number) => {
+        const fmt = (n: number) => (n >= 1000 ? `$${n / 1000}k` : `$${n}`)
+        if (max >= 100000) return `${fmt(min)}+`
+        return `${fmt(min)} – ${fmt(max)}`
     }
 
     const addTimelineValue = (timeline: string) => {
@@ -133,6 +156,16 @@ const BudgetTimelineForm = ({
                 <Paragraph variant='m-bold'>
                     {SELECT_AN_ESTIMATED_BUDGET_RANGE_FOR_YOUR_PROJECT}
                 </Paragraph>
+                <div className='flex flex-wrap gap-3'>
+                    {budgetPresets.map(([min, max]) => (
+                        <OptionChip
+                            key={`${min}-${max}`}
+                            label={presetLabel(min, max)}
+                            selected={minBudgetValue === min && maxBudgetValue === max}
+                            onSelect={() => applyBudget(min, max)}
+                        />
+                    ))}
+                </div>
                 <div className='grid grid-cols-2 justify-items-center'>
                     <div>
                         <Paragraph variant='m-bold' color='primary' alignment='text-center'>
@@ -157,7 +190,7 @@ const BudgetTimelineForm = ({
                         allowCross={false}
                         min={1000}
                         max={100000}
-                        defaultValue={[defaultBudget[0], defaultBudget[1]]}
+                        value={[minBudgetValue, maxBudgetValue]}
                         onChange={onSliderChange}
                         step={500}
                         railStyle={{

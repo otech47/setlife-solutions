@@ -50,6 +50,7 @@ const ConsultationPage: NextPage = () => {
     const [services, setServices] = useState<String[]>([])
     const [contactInformationError, setContactInformationError] = useState(true)
     const [serviceInformationError, setServiceInformationError] = useState(true)
+    const [budgetTimelineError, setBudgetTimelineError] = useState(true)
     const [disabledButton, setDisabledButton] = useState(true)
     const [projectGoals, setProjectGoals] = useState<string>('')
     const [constraints, setConstraints] = useState<string>('')
@@ -58,11 +59,13 @@ const ConsultationPage: NextPage = () => {
 
     // Drive the progress bar + per-section badges off the existing error flags.
     const contactComplete = !contactInformationError
+    const budgetComplete = !budgetTimelineError
     const goalsComplete = !serviceInformationError
-    const requiredTotal = 2
-    const requiredDone = [contactComplete, goalsComplete].filter(Boolean).length
+    const requiredTotal = 3
+    const requiredDone = [contactComplete, budgetComplete, goalsComplete].filter(Boolean).length
     const remainingSections = [
         !contactComplete && CONTACT_INFORMATION,
+        !budgetComplete && BUDGET_AND_TIMELINE,
         !goalsComplete && PROJECT_GOALS
     ].filter(Boolean) as string[]
 
@@ -84,10 +87,11 @@ const ConsultationPage: NextPage = () => {
 
     useEffect(() => {
         setDisabledButton(
-            contactInformationError || 
-            serviceInformationError
+            contactInformationError ||
+            serviceInformationError ||
+            budgetTimelineError
         )
-    }, [contactInformationError, serviceInformationError])
+    }, [contactInformationError, serviceInformationError, budgetTimelineError])
 
     useEffect(() => {
         setProjectGoals(services.length ? services.join('. ') : '')
@@ -126,7 +130,7 @@ const ConsultationPage: NextPage = () => {
 
     return (
         <div className='ConsultationPage'>
-            <Section paddingBottom='pb-10 md:pb-12'>
+            <Section paddingTop='pt-8 md:pt-12' paddingBottom='pb-10 md:pb-12'>
                 <Headline variant='h1'>
                     {PLEASE_FILL_OUT_THE_FORM}
                 </Headline>
@@ -154,10 +158,11 @@ const ConsultationPage: NextPage = () => {
                         setContactInformationError={setContactInformationError}
                     />
                 </FormSection>
-                <FormSection title={BUDGET_AND_TIMELINE} step={2} optional>
+                <FormSection title={BUDGET_AND_TIMELINE} step={2} complete={budgetComplete}>
                     <BudgetTimelineForm
                         setBudget={setBudget}
                         setTimeline={setTimeline}
+                        setBudgetTimelineError={setBudgetTimelineError}
                         defaultBudget={[DEFAULT_MIN_BUDGET, DEFAULT_MAX_BUDGET]}
                     />
                 </FormSection>
