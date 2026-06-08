@@ -14,7 +14,7 @@ import {
 const BitcoinOperation = ({}) => {
     return (
         <div className='BitcoinOperation bg-bitcoin bg-no-repeat bg-right-bottom md:bg-right bg-44 md:bg-contain'>
-            <div className='grid grid-rows-2 gap-6 pt-12'>
+            <div className='grid grid-rows-2 gap-6 py-16 md:py-24'>
                 <div className=''>
                     <Headline variant='xxl' color='solid-white' alignment='text-left'>
                         { SETLIFE_OPERATES }
@@ -24,7 +24,7 @@ const BitcoinOperation = ({}) => {
                     </Headline>
                 </div>
                 <div className=''>
-                    <LearnMore text={CLICK_TO_LEARN_MORE} url={BITCOIN_BANNER_URL} newTab />
+                    <LearnMore text={CLICK_TO_LEARN_MORE} url={BITCOIN_BANNER_URL} color='solid-white' newTab />
                 </div>
             </div>
         </div>

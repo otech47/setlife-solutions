@@ -53,7 +53,7 @@ export default function Navbar({
     const [open, setOpen] = useState(false)
     
     return (
-        <nav className='flex filter bg-solid-black px-4 py-4 h-20 items-center md:bg-solid-white'>
+        <nav className='sticky top-0 z-40 flex filter bg-solid-black px-4 py-4 h-20 items-center md:bg-solid-white/95 md:backdrop-blur md:border-b md:border-solid-black/5 md:shadow-soft'>
             <MobileNav 
                 open={openMobileNavbar} 
                 setOpen={setOpenMobileNavbar} 

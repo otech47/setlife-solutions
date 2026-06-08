@@ -34,7 +34,7 @@ const Footer = ({}) => {
     }
 
     return (
-        <footer className='Footer grid grid-cols-1 md:grid-cols-2 bg-solid-black px-8 md:px-24 xl:px-48 py-6 items-center flex justify-between'>
+        <footer className='Footer grid grid-cols-1 md:grid-cols-2 bg-solid-black border-t border-primary/30 px-8 md:px-24 xl:px-48 py-8 items-center flex justify-between'>
             <div className='invisible md:visible grid grid-flow-col auto-cols-max w-auto'>
                 <Headline variant='h2-semibold' color='solid-white' alignment='text-right'>
                     { SETLIFE }
