@@ -12,6 +12,8 @@ import {
     SERVICES_PROVIDED
 } from '../constants/strings'
 
+import { resourceLabel } from '../utilities/projectResource'
+
 import ItemProps from '../interfaces/ItemProps'
 import ProjectDetailsProps from '../interfaces/ProjectDetailsProps'
 
@@ -83,14 +85,16 @@ const ProjectInformation = ({
                     { renderServicesProvided(servicesProvided) }
                 </div>
                 <div>
-                    <div className='md:hidden grid grid-cols-1 mb-4'>
-                        <Button link={projectLink} variant='dark'>
-                            <div className='grid grid-flow-col auto-cols-max'>
-                                {`${projectName.toUpperCase()}.COM`}
-                                <ArrowIcon />
-                            </div>
-                        </Button>
-                    </div>
+                    { projectLink && (
+                        <div className='md:hidden grid grid-cols-1 mb-4'>
+                            <Button link={projectLink} variant='dark'>
+                                <div className='grid grid-flow-col auto-cols-max'>
+                                    { resourceLabel(projectLink, projectName) }
+                                    <ArrowIcon />
+                                </div>
+                            </Button>
+                        </div>
+                    )}
                     <div className='hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'>
                         <Button link='/'>
                             { CAN_YOU_PROVIDE_THESE_SERVICES }

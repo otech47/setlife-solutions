@@ -3,6 +3,8 @@ import React from 'react'
 import ArrowIcon from './ArrowIcon'
 import Button from './Button'
 
+import { resourceLabel } from '../utilities/projectResource'
+
 interface ProjectDetailBannerProps {
     backgroundImageUrl: string,
     deviceImageUrl: string,
@@ -43,14 +45,16 @@ const ProjectDetailBanner = ({
                             alt={projectName}  
                         />
                     </div>
-                    <div className='flex justify-center'>
-                        <Button link={projectResource} variant='dark'>
-                            <div className='grid grid-flow-col auto-cols-max'>
-                                {`${projectName.toUpperCase()}.COM`}
-                                <ArrowIcon />
-                            </div>
-                        </Button>
-                    </div>
+                    { projectResource && (
+                        <div className='flex justify-center'>
+                            <Button link={projectResource} variant='dark'>
+                                <div className='grid grid-flow-col auto-cols-max'>
+                                    { resourceLabel(projectResource, projectName) }
+                                    <ArrowIcon />
+                                </div>
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
