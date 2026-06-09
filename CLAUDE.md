@@ -25,7 +25,8 @@ Playwright **visual-regression** suite under `tests/visual/` (see
   model; staging must match it. Read-only - no forms are submitted, no writes.
 - It compares two LIVE environments, so **staging must be scaled up** first
   (`heroku ps:scale web=1 -a setlife-solutions-staging`, wait ~15s for the
-  cold-start race, then scale back to 0 when done). This is the gate to run
+  cold-start race, then scale back to 0 when done - but during a deploy flow,
+  keep it up for the user to review per guardrail #7). This is the gate to run
   before deploying prod.
 - Genuinely random regions (e.g. the shuffled `.ProjectSimilarWork` section on
   project detail pages) are **hidden** (`display:none`) during capture, not
@@ -139,8 +140,12 @@ heroku logs --tail -a setlife-solutions-staging   # watch boot
 # Wait ~15s after boot before hitting /api/v1 - see cold-start race in Landmines.
 # Verify at https://staging.setlife.solutions
 npm run test:visual   # pixel-diff staging vs prod; review any flagged routes (see Testing)
-# When done, scale back to 0 (dyno billing stops, ~$5/mo Postgres continues):
-heroku ps:scale web=0 -a setlife-solutions-staging
+# LEAVE STAGING UP for the user to review - this is the whole point of a staging
+# deploy. Do NOT scale to 0 here. Only scale back down AFTER the user has
+# reviewed staging AND the prod deploy is done (or they've decided not to ship).
+# Tearing it down right after your own automated checks defeats the purpose.
+# See guardrail #7. To scale down once the user is finished:
+#   heroku ps:scale web=0 -a setlife-solutions-staging
 ```
 
 **Turning staging on/off (without redeploying):** scaling is independent of the deployed slug. Use this any time you want to verify staging or just leave it cold:
@@ -178,6 +183,7 @@ These are not suggestions. Future Claude sessions deploying this app MUST follow
 4. **Always run `npm run build` locally before pushing anything.** There is no CI. Build failures hit Heroku and the previous slug keeps serving - easy to assume success.
 5. **Before deploying prod, confirm staging actually came up.** `heroku ps:scale web=1` + `heroku logs --tail` + load the staging URL in a browser-equivalent (or ask the user to). A successful `git push` only proves the slug compiled, not that the app boots.
 6. **For prod deploys specifically: get explicit user go-ahead on the deploy, in writing in the chat.** Confirmation for staging is lighter; for prod it's a hard gate.
+7. **Do not scale staging to 0 until the user is finished with it.** A staging deploy exists so the *user* can review the live site - not just so you can run automated checks. After you verify, leave `web=1` and hand staging to the user. Only run `heroku ps:scale web=0 -a setlife-solutions-staging` once they have reviewed it **and** the prod deploy is complete (or they've explicitly decided not to deploy). When you say "staging only for now," that means *leave it running*. Tearing it down right after your own checks defeats the entire purpose of staging.
 
 ### Known landmines
 
