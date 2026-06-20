@@ -1,3 +1,9 @@
+> **Note for developers/agents:** This file is a *sample case study / sales
+> artifact* describing an unrelated client engagement (a carp-fishing holiday
+> booking platform). It does **not** describe this repository's architecture,
+> stack, or roadmap. For engineering docs, see [`CLAUDE.md`](../CLAUDE.md) and the
+> root [`README.md`](../README.md).
+
 This document is the first draft of a case study to demonstrate methods and processes used in the project management and engineering of modern software applications, particularly in the context of upgrading an existing software application to meet modern standard.
 
 The core of this study will be a detailed development plan for a sample project carried out in 2019.

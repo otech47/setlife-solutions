@@ -5,9 +5,14 @@ Cross-environment pixel diff. For every route, the suite renders **prod** and
 stabilized full-page screenshots, and asserts staging matches prod within a
 tolerance. **Prod is the model**; staging is the candidate.
 
-This is the gate to run before `heroku pipelines:promote`: zero diff means the
-pending deploy is backend/data-only and visually safe; any diff is either an
-intended change to eyeball in the report or a regression to block.
+This is the gate to run before deploying prod: zero diff means the pending
+deploy is backend/data-only and visually safe; any diff is either an intended
+change to eyeball in the report or a regression to block.
+
+> **Deploy model:** prod is shipped by **building on prod**
+> (`git push heroku-prod master`), **NOT** `heroku pipelines:promote`. Promotion
+> copies staging's slug — which has staging's `API_V1_URL` inlined at build time —
+> to prod and points it at the staging DB. See `CLAUDE.md` for the full runbook.
 
 Read-only. It navigates and screenshots; it never submits forms or writes data.
 
@@ -72,7 +77,8 @@ pages rendered at different heights/widths - usually a missing or extra element,
 which is the strongest regression signal.
 
 If the difference is intended (you deliberately changed the UI on the branch
-that built the staging slug), that is expected: review it, then promote. The
+that built the staging slug), that is expected: review it, then ship the deploy
+by building on prod (`git push heroku-prod master` — see `CLAUDE.md`). The
 suite's job is to make sure no *unintended* visual change slips through.
 
 ## Smoke test without staging

@@ -8,14 +8,24 @@ Created with NextJS combines both backend and framework into a single app. React
 
 ### Project Structure
 
-- The `/pages` folder contains the routing of the app
-- The `/components` folder contains all the reusable react-based components
-- The `/api` folder contains a backend model based on
+- `pages/` — Next.js routes (pages router): React pages, plus the API routes under `pages/api/`.
+- `pages/api/v1.ts` — the GraphQL endpoint (apollo-server-micro); the schema is assembled under `pages/api/graphql/schema/`.
+- `pages/api/models/` + `pages/api/migrations/` — Sequelize models and DB migrations (Postgres).
+- `components/` — reusable React components (flat; no per-component folders).
+- `interfaces/` — TypeScript prop interfaces split out of components.
+- `operations/` — client-side GraphQL queries/mutations as `gql` literals.
+- `constants/strings.ts` — static copy as named exports (run `npm run order-strings` after adding).
+- `config/` — app config, including DB-credential wiring.
+- `styles/` — Tailwind + SCSS (entry `styles/index.scss`).
+- `utilities/` — helpers (e.g. `s3.ts`).
+- `tests/visual/` — Playwright visual-regression suite (staging vs prod).
 
-  * An GraphQL API using micro apollo
-  * A sequelize ORM with the model and migrations to connect to a sequelize DB
-
-- The `/config` folder miscellaneous config for multiple purposes including DB credentials
+> **Site content lives in the database, not in code.** Project/service copy,
+> links, and images are DB rows (there are no seeders). Change them with data
+> migrations, not by editing source. The canonical engineering reference —
+> architecture, request flow, GraphQL schema assembly, data layer, frontend
+> conventions, and the full Heroku deploy runbook — is [`CLAUDE.md`](./CLAUDE.md).
+> Read it before making changes or deploying.
 
 ```
 / setlife-solutions
